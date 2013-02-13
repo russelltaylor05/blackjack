@@ -97,7 +97,7 @@ int determine_strategy(unsigned int *all_cards, int pCard1, int pCard2,
             if (pSum + all_cards[i] > 31)
             {
                /*Player was already at 21*/
-               printf("THIS SHOULD NEVER HAPPEN!...\n");
+               printf("THIS SHOULD NEVER HAPPEN!\n");
                stand++;
             }
             else
