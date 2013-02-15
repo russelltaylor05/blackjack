@@ -2,9 +2,6 @@
 #ifndef HEADER_H
 #define HEADER_H
 
-/*Macro to define how many cards[] make up a deck*/
-#define ONE_DECK 4
-
 /*Global to define how many cards are in a deck*/
 unsigned const int DECK_SIZE = 52;
 
