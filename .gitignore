@@ -1,2 +1,4 @@
 *.swp
 strategy
+poker
+*.o

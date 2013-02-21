@@ -32,8 +32,19 @@ int main(int argc, char *argv[])
   score = eval_5hand(randomHand);
   rank = hand_rank(score);      
   printf("\nScore: %d\n", score);
-  printf("Rank: %s\n",  value_str[rank]);
+  printf("Rank: %s\n\n",  value_str[rank]);
 
+
+  /* Randomize hand until finding a Full House */
+  printf("Looking for a FULL_HOUSE:\n");
+  while(rank != FULL_HOUSE) {
+    shuffle_deck(deck);
+    setRandomHand(deck, randomHand);  
+    score = eval_5hand(randomHand);
+    rank = hand_rank(score);      
+    printf(".");
+  }
+  printf("\nFull House Score: %d\n", score);
 
   printf("\n");
   return 0;
