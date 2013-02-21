@@ -7,7 +7,8 @@
 int main(int argc, char *argv[])
 {
   int deck[52], randomHand[HAND_SIZE], staticHand[HAND_SIZE];
-  int score, rank;
+  int score, rank, staticScore, i= 0, tally = 0;
+  int numHands;
   
   /* seed the random number generator */
   srand48((int) time(NULL));
@@ -25,6 +26,7 @@ int main(int argc, char *argv[])
   rank = hand_rank(score);      
   printf("\nScore: %d\n", score);
   printf("Rank: %s\n\n\n",  value_str[rank]);
+  staticScore = score;
   
   /* Random Hand */
   printf("Random Hand\n");
@@ -44,7 +46,25 @@ int main(int argc, char *argv[])
     rank = hand_rank(score);      
     printf(".");
   }
-  printf("\nFull House Score: %d\n", score);
+  printf("\nFull House Score: %d\n\n", score);
+
+
+  /* Compare Random hand to static Hand */
+  numHands = 10000;
+  printf("Running %d random hands:\n", numHands);
+  while(i < numHands) {
+    shuffle_deck(deck);
+    setRandomHand(deck, randomHand);  
+    score = eval_5hand(randomHand);
+    rank = hand_rank(score);          
+    if(score < staticScore) {
+      tally++;
+    }
+    i++;
+  }
+  printf("%.2f percent of the Random Hands beat the Static Hand\n", 
+    (float)tally / (float)numHands * 100.00);
+
 
   printf("\n");
   return 0;
@@ -64,7 +84,7 @@ void setStaticHand(int *deck, int *hand)
   hand[0] = deck[cardIndex];  
   cardIndex = find_card(Nine, HEART, deck);
   hand[1] = deck[cardIndex];
-  cardIndex = find_card(Nine, SPADE, deck);
+  cardIndex = find_card(Ten, SPADE, deck);
   hand[2] = deck[cardIndex];
   cardIndex = find_card(Queen, HEART, deck);
   hand[3] = deck[cardIndex];
