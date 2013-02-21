@@ -2,12 +2,6 @@
 #include "lookuptable.h"
 #include "poker.h"
 
-// Poker hand evaluator
-//
-// Kevin L. Suffecool
-// suffecool@bigfoot.com
-//
-
 void    srand48();
 double  drand48();
 
