@@ -58,6 +58,7 @@ short eval_5hand( int *hand );
 short eval_7hand( int *hand );
 
 
-void setStaticHand(int *deck, int *hand);
-void setRandomHand(int *deck, int *hand);
-int inArray(int value, int *array, int size);
+void setStaticHand (int *deck, int *hand);
+void setRandomHand (int *deck, int *hand, int *excludedCards); 
+int inArray (int value, int *array, int size);
+void printRankTable (int *deck);
