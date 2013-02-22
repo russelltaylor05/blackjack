@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
   staticScore = score;
 
   /* Compare Random hand to static Hand */
-  numHands = 25000;
+  numHands = 10000;
   printf("Running %d random hands:\n", numHands);
   while(i < numHands) {
     shuffle_deck(deck);
