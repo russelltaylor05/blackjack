@@ -36,9 +36,11 @@ int main(int argc, char *argv[])
   printf("\nScore: %s (%d)\n\n", value_str[rank], score);
   staticScore = score;
 
+
   /* Compare Random hand to static Hand */
   numHands = 10000;
   printf("Running %d random hands:\n", numHands);
+
   while(i < numHands) {
     shuffle_deck(deck);
     setRandomHand(deck, tempHand, randomHand);  
@@ -49,6 +51,7 @@ int main(int argc, char *argv[])
     }
     i++;
   }
+
   printf("%.2f%% of Hands will beat: ", (float)tally / (float)numHands * 100.00);
   print_hand(randomHand, HAND_SIZE);
   printf("\n");
