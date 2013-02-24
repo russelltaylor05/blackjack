@@ -6,9 +6,13 @@
 
 int main(int argc, char *argv[])
 {
-  int deck[52], randomHand[HAND_SIZE], staticHand[HAND_SIZE], tempHand[HAND_SIZE];
-  int score, rank, staticScore, i= 0, tally = 0;
-  int numHands;
+  int deck[52], randomHand[HAND_SIZE], staticHand[HAND_SIZE];
+  int score, rank, i= 0;
+  int throwAwayCnt;
+  int throwAwayCards[] = {0,0,0,0,0,0,0,0,0,0,0,0};
+  int excludeCards[] = {0,0,0,0,0,0,0,0,0,0,0,0};
+  float results;
+  
 
   /* seed the random number generator */
   srand48((int) time(NULL));
@@ -19,47 +23,142 @@ int main(int argc, char *argv[])
   //printRankTable(deck);
   
   setStaticHand(deck, staticHand);  
-  setRandomHand(deck, randomHand, NULL);  
-  
-  /* Static Hand */
-  printf("\nStatic Hand: ");
-  print_hand(staticHand, HAND_SIZE);
-  score = eval_5hand(staticHand);
-  rank = hand_rank(score);      
-  printf("\nScore: %s (%d)\n\n", value_str[rank], score);
+  setRandomHand(deck, randomHand, throwAwayCards, 0);   
 
   /* Random Hand */
-  printf("Random Hand: ");
+  printf("\nRandom Hand: ");
   print_hand(randomHand, HAND_SIZE);
   score = eval_5hand(randomHand);
   rank = hand_rank(score);      
-  printf("\nScore: %s (%d)\n\n", value_str[rank], score);
-  staticScore = score;
+  printf("\nScore: %s (%d)\n", value_str[rank], score);
 
+  /* Compare Random hands to static Hand */
+  results = analyzeHand(randomHand, deck, randomHand, HAND_SIZE);
+  printf("Win Ration: %.2f%% \n\n", results);
+   
 
-  /* Compare Random hand to static Hand */
-  numHands = 10000;
-  printf("Running %d random hands:\n", numHands);
+  printf("Throw Away First Two Cards: \n");
+  for(i = 0; i < 10; i++) {
+  
+    throwAwayCards[0] = randomHand[0];
+    throwAwayCards[1] = randomHand[1];
+    throwAwayCnt = 2;
 
-  while(i < numHands) {
-    shuffle_deck(deck);
-    setRandomHand(deck, tempHand, randomHand);  
-    score = eval_5hand(tempHand);
-    rank = hand_rank(score);          
-    if(score < staticScore) {
-      tally++;
-    }
-    i++;
+    copyHand(excludeCards, randomHand, HAND_SIZE);
+
+    updateHand(deck, randomHand, throwAwayCards, throwAwayCnt);   
+
+    excludeCards[HAND_SIZE] = randomHand[0];
+    excludeCards[HAND_SIZE+1] = randomHand[1];
+
+    results = analyzeHand(randomHand, deck, excludeCards, HAND_SIZE + throwAwayCnt);
+    
+    print_hand(randomHand, HAND_SIZE);
+    score = eval_5hand(randomHand);
+    rank = hand_rank(score);
+    printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
+    
+    //print_hand(excludeCards, 7);    
+    
   }
-
-  printf("%.2f%% of Hands will beat: ", (float)tally / (float)numHands * 100.00);
-  print_hand(randomHand, HAND_SIZE);
-  printf("\n");
     
   printf("\n");
   return 0;
 }
 
+
+/* Returns: %chance that the hand will win */ 
+float analyzeHand(int *hand, int *deck, int *exclude, int excludeSize)
+{
+  int resolution = ANALYZE_RESOLUTION;
+  int tempHand[HAND_SIZE];
+  int handScore, tempScore, i;
+  int wins = 0;
+
+  handScore = eval_5hand(hand);  
+  for(i = 0; i < resolution; i++) {
+    setRandomHand(deck, tempHand, hand, HAND_SIZE);
+    tempScore = eval_5hand(tempHand);
+    if(handScore < tempScore) {
+      wins++;
+    }
+  }  
+  return (float)wins / (float)resolution * 100.00;
+}
+
+
+
+/* Picks 5 random cards and sets them in *hand
+ * excludedCards will be excluded from random hand
+ * Pass NULL to excludedCards if there are none 
+ */
+void setRandomHand(int *deck, int *hand, int *excludedCards, int excludeCnt) 
+{
+  int i;  
+  int excludedCardsTemp[HAND_SIZE * 2];
+
+  /* Copy exclude cards to new temp array */
+  for(i = 0; i < excludeCnt; i++)
+    excludedCardsTemp[i] = excludedCards[i];
+  
+  /* Every time we get a new random card, add
+   * it to the excludedCardsTemp array so that it won't
+   * get choosen again.
+   */
+  for(i = 0; i < HAND_SIZE; i++) {
+    hand[i] = getRandomCard(deck, excludedCardsTemp, excludeCnt);
+    excludedCardsTemp[excludeCnt] = hand[i];
+    excludeCnt++;    
+  }
+}
+
+
+/* Updates a hand's cards specified by throwAwayCards[]
+ */
+void updateHand(int *deck, int *hand, int *throwAwayCards, int throwAwayCnt)
+{
+  int index, i = 0;
+  int excludeCnt = HAND_SIZE;
+  int excludedCards[HAND_SIZE * 2]; // large enough for a 5 card hand plus 5 cards to throw away
+      
+  /* Copy hand into excludeCards array */
+  for(i = 0; i < HAND_SIZE; i++)
+    excludedCards[i] = hand[i];
+  
+  /* For each throw away card, choose a new random card
+   * that is not in our excluded cards array.
+   * Once a new card is choosen, add it the end of the 
+   * excluded cards array
+   */
+  for(i = 0; i < throwAwayCnt; i++) {    
+    index = findCardIndex(hand, throwAwayCards[i], HAND_SIZE);
+    hand[index] = getRandomCard(deck, excludedCards, excludeCnt);
+    excludedCards[excludeCnt] = hand[index];
+    excludeCnt++;
+  }
+}
+
+/* Returns random card VALUE that is not in exclude array */
+int getRandomCard(int *deck, int *exclude, int excludeSize) 
+{
+  int i = 0;  
+  shuffle_deck(deck);
+  while(inArray(deck[i], exclude, excludeSize ))
+    i++;
+  
+  /*
+  printf("---\n");
+  for(i = 0; i <excludeSize; i++ ) {
+    print_card(exclude[i]);
+    printf(", ");
+  }
+  printf("\n");
+  */
+  if (inArray(deck[i], exclude, excludeSize))
+    printf("we got duplicate\n");
+     
+  return deck[i];
+}
 
 
 /* Manually set a hand of cards
@@ -83,32 +182,43 @@ void setStaticHand(int *deck, int *hand)
 }
 
 
-/* Picks 5 random cards and sets them in *hand
- * excludedCards will be excluded from random hand
- * Pass NULL to excludedCards if there are none 
- */
-void setRandomHand(int *deck, int *hand, int *excludedCards) 
-{
-  int randNum;  
-  int history[HAND_SIZE];
-  int historyCnt = 0;  
-  int excludeCheckSize;
-  srand((int) time(NULL));
-  
-  /* If excludedCards is NULL we pass a 0 to the size parameter of inArray() */
-  excludeCheckSize = (!excludedCards) ? 0 : HAND_SIZE;
-  
-  while (historyCnt < HAND_SIZE) {
-    randNum = rand() % (52);
-    if (!inArray(randNum, history, historyCnt)) { // make sure we don't have duplicates 
-      if(!inArray(deck[randNum], excludedCards, excludeCheckSize)) { // check excluded hand
-        history[historyCnt] = randNum;
-        hand[historyCnt] = deck[randNum];
-        historyCnt++;      
-      }
-    }       
-  } 
+/* copies source hand to destination hand */
+void copyHand (int *dest, int *source, int handSize) {
+  int i;    
+  for(i = 0; i < handSize; i++) {
+    dest[i] = source[i];
+  }  
 }
+
+
+/* Return 1 if value is in array
+ * Return 0 if value is not in array
+ */
+int inArray(int value, int *array, int size) 
+{ 
+  int i;
+  for(i = 0; i < size; i++) {
+    if (array[i] == value) {
+      return 1;
+    }    
+  }
+  return 0;
+}
+
+/* returns index of cardValue in *hand */
+int findCardIndex(int *hand, int cardValue, int handSize) 
+{ 
+  int i;
+  for(i = 0; i < handSize; i++) {
+    if (hand[i] == cardValue) {
+      return i;
+    }    
+  }
+  return -1;
+}
+
+
+
 
 
 /* Print a table for frequency of each Hand by Rank */
@@ -145,16 +255,3 @@ void printRankTable(int *deck)
 }
 
 
-/* Return 1 if value is in array
- * Return 0 if value is not in array
- */
-int inArray(int value, int *array, int size) 
-{ 
-  int i;
-  for(i = 0; i < size; i++) {
-    if (array[i] == value) {
-      return 1;
-    }    
-  }
-  return 0;
-}

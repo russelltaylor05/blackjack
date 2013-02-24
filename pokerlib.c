@@ -103,7 +103,7 @@ void print_hand( int *hand, int n )
     char suit;
     static char *rank = "23456789TJQKA";
 
-    for ( i = 0; i < n; i++ )
+    for ( i = 0; i < n; i++ ) 
     {
         r = (*hand >> 8) & 0xF;
         if ( *hand & 0x8000 )
@@ -118,6 +118,25 @@ void print_hand( int *hand, int n )
         printf( "%c%c ", rank[r], suit );
         hand++;
     }
+}
+
+void print_card(int card) 
+{
+  int r;
+  char suit;
+  static char *rank = "23456789TJQKA";
+
+  r = (card >> 8) & 0xF;
+  if ( card & 0x8000 )
+      suit = 'c';
+  else if ( card & 0x4000 )
+      suit = 'd';
+  else if ( card & 0x2000 )
+      suit = 'h';
+  else
+      suit = 's';
+
+  printf( "%c%c ", rank[r], suit );
 }
 
 

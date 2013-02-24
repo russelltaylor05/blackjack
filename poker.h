@@ -9,6 +9,7 @@
 #define	HIGH_CARD	9
 
 #define HAND_SIZE 5
+#define ANALYZE_RESOLUTION 1000
 
 #define	RANK(x)		((x >> 8) & 0xF)
 
@@ -52,6 +53,7 @@ void init_deck( int *deck );
 int find_card( int rank, int suit, int *deck );
 void shuffle_deck( int *deck );
 void print_hand( int *hand, int n );
+void print_card( int card );
 int hand_rank( short val );
 short eval_5cards( int c1, int c2, int c3, int c4, int c5 );
 short eval_5hand( int *hand );
@@ -59,6 +61,13 @@ short eval_7hand( int *hand );
 
 
 void setStaticHand (int *deck, int *hand);
-void setRandomHand (int *deck, int *hand, int *excludedCards); 
+void setRandomHand (int *deck, int *hand, int *excludedCards, int excludeCnt) ; 
+void updateHand (int *deck, int *hand, int *throwAwayCards, int throwAwayCnt);
 int inArray (int value, int *array, int size);
 void printRankTable (int *deck);
+int findCardIndex (int *hand, int cardValue, int handSize);
+int getRandomCard(int *deck, int *exclude, int excludeSize);
+
+void copyHand (int *hand1, int *hand2, int handSize);
+
+float analyzeHand(int *hand, int *deck, int *exclude, int excludeSize);
