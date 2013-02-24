@@ -11,29 +11,25 @@ int main(int argc, char *argv[])
   int throwAwayCnt;
   int throwAwayCards[] = {0,0,0,0,0,0,0,0,0,0,0,0};
   int excludeCards[] = {0,0,0,0,0,0,0,0,0,0,0,0};
-  float results;
+  float results, resultTotal = 0;
   
-
   /* seed the random number generator */
   srand48((int) time(NULL));
   
   /* initialize the deck */
   init_deck(deck);
   
-  //printRankTable(deck);
-  
   setStaticHand(deck, staticHand);  
   setRandomHand(deck, randomHand, throwAwayCards, 0);   
 
   /* Random Hand */
   printf("\nRandom Hand: ");
-  print_hand(randomHand, HAND_SIZE);
-  score = eval_5hand(randomHand);
+  print_hand(staticHand, HAND_SIZE);
+  score = eval_5hand(staticHand);
   rank = hand_rank(score);      
   printf("\nScore: %s (%d)\n", value_str[rank], score);
 
-  /* Compare Random hands to static Hand */
-  results = analyzeHand(randomHand, deck, randomHand, HAND_SIZE);
+  results = analyzeHand(staticHand, deck, staticHand, HAND_SIZE);
   printf("Win Ration: %.2f%% \n\n", results);
    
 
@@ -58,9 +54,9 @@ int main(int argc, char *argv[])
     rank = hand_rank(score);
     printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
     
-    //print_hand(excludeCards, 7);    
-    
+    resultTotal += results;    
   }
+  printf("New Win Ratio: %.2f%% \n", resultTotal / 10);  
     
   printf("\n");
   return 0;
@@ -146,14 +142,6 @@ int getRandomCard(int *deck, int *exclude, int excludeSize)
   while(inArray(deck[i], exclude, excludeSize ))
     i++;
   
-  /*
-  printf("---\n");
-  for(i = 0; i <excludeSize; i++ ) {
-    print_card(exclude[i]);
-    printf(", ");
-  }
-  printf("\n");
-  */
   if (inArray(deck[i], exclude, excludeSize))
     printf("we got duplicate\n");
      

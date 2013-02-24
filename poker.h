@@ -9,7 +9,7 @@
 #define	HIGH_CARD	9
 
 #define HAND_SIZE 5
-#define ANALYZE_RESOLUTION 1000
+#define ANALYZE_RESOLUTION 5000
 
 #define	RANK(x)		((x >> 8) & 0xF)
 
