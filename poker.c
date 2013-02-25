@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
   /* initialize the deck */
   init_deck(deck);
   
+  /* Set Hands */
   setStaticHand(deck, staticHand);  
   setRandomHand(deck, randomHand, throwAwayCards, 0);   
 
@@ -34,7 +35,9 @@ int main(int argc, char *argv[])
   printf("Win Ration: %.2f%% \n\n", results);
    
 
+  /* Throw Away logic - Should be moved to a function */
   printf("Throw Away First Two Cards: \n");
+  
   for(i = 0; i < THROWAWAY_RESOLUTION; i++) {
   
     throwAwayCards[0] = randomHand[0];
@@ -42,7 +45,6 @@ int main(int argc, char *argv[])
     throwAwayCnt = 2;
 
     copyHand(excludeCards, randomHand, HAND_SIZE);
-
     updateHand(deck, randomHand, throwAwayCards, throwAwayCnt);   
 
     excludeCards[HAND_SIZE] = randomHand[0];
@@ -54,20 +56,31 @@ int main(int argc, char *argv[])
     score = eval_5hand(randomHand);
     rank = hand_rank(score);
     printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
-
     
     resultTotal += results;    
   }
-  printf("\n");
-  
-  printf("New Win Ratio: %.2f%% \n", resultTotal / THROWAWAY_RESOLUTION);  
+  printf("\n");  
+  printf("New Win Ratio: %.2f%% \n\n", resultTotal / THROWAWAY_RESOLUTION);  
     
-  printf("\n");
   return 0;
 }
 
+float analzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowAwaySize)
+{
 
-/* Returns: %chance that the hand will win */ 
+
+}
+
+
+float analyzeThrowAway(int *hand, int *deck, int *throwAway, int throwAwaySize)
+{
+
+  
+  
+}
+
+
+/* Returns: %chance that hand will win */ 
 float analyzeHand(int *hand, int *deck, int *exclude, int excludeSize)
 {
   int resolution = ANALYZE_RESOLUTION;
@@ -90,7 +103,6 @@ float analyzeHand(int *hand, int *deck, int *exclude, int excludeSize)
 
 /* Picks 5 random cards and sets them in *hand
  * excludedCards will be excluded from random hand
- * Pass NULL to excludedCards if there are none 
  */
 void setRandomHand(int *deck, int *hand, int *excludedCards, int excludeCnt) 
 {
