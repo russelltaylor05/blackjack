@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include "poker.h"
 
-
-
 int main(int argc, char *argv[])
 {
   int deck[52], randomHand[HAND_SIZE], staticHand[HAND_SIZE];
@@ -13,9 +11,15 @@ int main(int argc, char *argv[])
   int throwAwayCards[] = {0,0,0,0,0,0,0,0,0,0,0,0};
   int excludeCards[] = {0,0,0,0,0,0,0,0,0,0,0,0};
   float results, resultTotal = 0;
-  
+
   /* seed the random number generator */
   srand48((int) time(NULL));
+
+/* UNCOMMENT TO RUN ONLY FAKE ANALYSIS
+  if (analyzePrediction(NULL,NULL,0,0))
+  {
+     return 0;
+  }*/
   
   /* initialize the deck */
   init_deck(deck);
@@ -52,10 +56,10 @@ int main(int argc, char *argv[])
 
     results = analyzeHand(randomHand, deck, excludeCards, HAND_SIZE + throwAwayCnt);
     
-    print_hand(randomHand, HAND_SIZE);
+//    print_hand(randomHand, HAND_SIZE);
     score = eval_5hand(randomHand);
     rank = hand_rank(score);
-    printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
+//    printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
     
     resultTotal += results;    
   }
@@ -65,18 +69,159 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-float analzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowAwaySize)
+/* This function uses many loops to ensure that all possible card combinations
+ * are analyzed.  It then compares each return of analyzeThrowAway and compares
+ * the win percentage returned to bestWinPercent and tracks the best win 
+ * percentage calculated.  Each time bestWinPercent is updated, it also
+ * updates bestThrowAwaySize depending on which loop block it is in, and also
+ * stores the card positions thrown away in a,b,c,d,e.  These are used at the
+ * end to determine what the best cards to throw away are (using inArray) and
+ * these best throw away cards are returned via *bestThrowAway*/
+
+float analyzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowAwaySize)
 {
+   /*Loop variables*/
+   int i=0,j=0,k=0,l=0;
+   /*Used to store which cards and return value give the best hand*/
+   float bestWinPercent = 0.0;
+   int a=-1,b=-1,c=-1,d=-1,e=-1;
 
+   /*Variables just used for testing*/
+   int m=0;
+   float dummyReturnValue;
+   srand(time(NULL));
 
+   /*Replace one card*/
+   for (i=0;i<5;i++)
+   {
+      printf("Replacing one card with (%i)\n",i);
+
+      /*This will be changed from a += to simply an = when function works*/
+      dummyReturnValue = analyzeThrowAway(NULL,NULL,NULL,0);
+
+      /*Check if we found a new best win percentage!*/
+      if (bestWinPercent < dummyReturnValue)
+      {
+         a=i;
+         bestWinPercent = dummyReturnValue;
+         bestThrowAwaySize = 1;
+      }
+   }
+
+   /*Replace two cards*/
+   for (j=0; j<5; j++)
+   {
+      for (i=j+1; i<5; i++)
+      {
+         printf("Replacing two cards (%i,%i)\n",i,j);
+
+         /*This will be changed from a += to simply an = when function works*/
+         dummyReturnValue = analyzeThrowAway(NULL,NULL,NULL,0);
+
+         /*Check if we found a new best win percentage!*/
+         if (bestWinPercent < dummyReturnValue)
+         {
+            a=i;b=j;
+            bestWinPercent = dummyReturnValue;
+            bestThrowAwaySize = 2;
+         }
+      }
+   }
+
+   /*Replace three cards*/
+   for (k=0; k<5; k++)
+   {
+      for (j=k+1; j<5; j++)
+      {
+         for (i=j+1; i<5; i++)
+         {
+            printf("Replacing three cards (%i,%i,%i)\n",i,j,k);
+
+            /*This will be changed from a += to simply an = when function works*/
+            dummyReturnValue = analyzeThrowAway(NULL,NULL,NULL,0);
+
+            /*Check if we found a new best win percentage!*/
+            if (bestWinPercent < dummyReturnValue)
+            {
+               a=i;b=j;c=k;
+               bestWinPercent = dummyReturnValue;
+               bestThrowAwaySize = 3;
+            }
+         }
+      }
+   }
+
+   /*Replace four cards*/
+   for (l=0; l<5; l++)
+   {
+      for (k=l+1; k<5; k++)
+      {
+         for (j=k+1; j<5; j++)
+         {
+            for (i=j+1; i<5; i++)
+            {
+               printf("Replacing four cards (%i,%i,%i,%i)\n",i,j,k,l);
+               
+               /*This will be changed from a += to simply an = when function works*/
+               dummyReturnValue = analyzeThrowAway(NULL,NULL,NULL,0);
+
+               /*Check if we found a new best win percentage!*/
+               if (bestWinPercent < dummyReturnValue)
+               {
+                  a=i;b=j;c=k;d=l;
+                  bestWinPercent = dummyReturnValue;
+                  bestThrowAwaySize = 4;
+               }
+            }
+         }
+      }
+   }
+
+   /*Replace five cards--just for fun, this will be hard coded*/
+   for (m=0; m<5; m++)
+   {
+      for (l=m+1; l<5; l++)
+      {
+         for (k=l+1; k<5; k++)
+         {
+            for (j=k+1; j<5; j++)
+            {
+               for (i=j+1; i<5; i++)
+               {
+                  printf("Replacing five cards (%i,%i,%i,%i,%i)\n",i,j,k,l,m);
+                  
+                  /*This will be changed from a += to simply an = when function works*/
+                  dummyReturnValue = analyzeThrowAway(NULL,NULL,NULL,0);
+
+                  /*Check if we found a new best win percentage!*/
+                  if (bestWinPercent < dummyReturnValue)
+                  {
+                     a=i;b=j;c=k;d=l;e=m;
+                     bestWinPercent = dummyReturnValue;
+                     bestThrowAwaySize = 5;
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   printf("Best Win Percentage is %.2f%%, by replacing %i cards\n",
+         bestWinPercent, bestThrowAwaySize);
+
+   /*Insert loop here using inArray to determine which of a,b,c,d,e are
+    * cards that were actually in the user's hand.  The cards that are
+    * NOT found by inArray will be passed back via bestThrowAway, as
+    * these are the cards that the user should throw away*/
+
+   return bestWinPercent;
 }
 
 
 float analyzeThrowAway(int *hand, int *deck, int *throwAway, int throwAwaySize)
 {
-
-  
-  
+   /*Return random number between 0 and 75*/
+   return ((rand()%75));  
 }
 
 
