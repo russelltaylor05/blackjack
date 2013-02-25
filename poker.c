@@ -4,6 +4,7 @@
 #include "poker.h"
 
 
+
 int main(int argc, char *argv[])
 {
   int deck[52], randomHand[HAND_SIZE], staticHand[HAND_SIZE];
@@ -24,17 +25,17 @@ int main(int argc, char *argv[])
 
   /* Random Hand */
   printf("\nRandom Hand: ");
-  print_hand(staticHand, HAND_SIZE);
-  score = eval_5hand(staticHand);
+  print_hand(randomHand, HAND_SIZE);
+  score = eval_5hand(randomHand);
   rank = hand_rank(score);      
   printf("\nScore: %s (%d)\n", value_str[rank], score);
 
-  results = analyzeHand(staticHand, deck, staticHand, HAND_SIZE);
+  results = analyzeHand(randomHand, deck, randomHand, HAND_SIZE);
   printf("Win Ration: %.2f%% \n\n", results);
    
 
   printf("Throw Away First Two Cards: \n");
-  for(i = 0; i < 10; i++) {
+  for(i = 0; i < THROWAWAY_RESOLUTION; i++) {
   
     throwAwayCards[0] = randomHand[0];
     throwAwayCards[1] = randomHand[1];
@@ -53,10 +54,13 @@ int main(int argc, char *argv[])
     score = eval_5hand(randomHand);
     rank = hand_rank(score);
     printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
+
     
     resultTotal += results;    
   }
-  printf("New Win Ratio: %.2f%% \n", resultTotal / 10);  
+  printf("\n");
+  
+  printf("New Win Ratio: %.2f%% \n", resultTotal / THROWAWAY_RESOLUTION);  
     
   printf("\n");
   return 0;
@@ -94,8 +98,7 @@ void setRandomHand(int *deck, int *hand, int *excludedCards, int excludeCnt)
   int excludedCardsTemp[HAND_SIZE * 2];
 
   /* Copy exclude cards to new temp array */
-  for(i = 0; i < excludeCnt; i++)
-    excludedCardsTemp[i] = excludedCards[i];
+  copyHand(excludedCardsTemp, excludedCards, excludeCnt);
   
   /* Every time we get a new random card, add
    * it to the excludedCardsTemp array so that it won't
@@ -205,6 +208,14 @@ int findCardIndex(int *hand, int cardValue, int handSize)
   return -1;
 }
 
+void printHandStats(int *hand, float results) 
+{
+    print_hand(hand, HAND_SIZE);
+    int score = eval_5hand(hand);
+    int rank = hand_rank(score);
+    printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
+
+}
 
 
 
