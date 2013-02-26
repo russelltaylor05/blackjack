@@ -10,7 +10,7 @@
 
 #define HAND_SIZE 5
 #define ANALYZE_RESOLUTION 10000
-#define THROWAWAY_RESOLUTION 100
+#define THROWAWAY_RESOLUTION 10
 
 
 #define	RANK(x)		((x >> 8) & 0xF)
@@ -71,3 +71,4 @@ int findCardIndex (int *hand, int cardValue, int handSize);
 int getRandomCard(int *deck, int *exclude, int excludeSize);
 void copyHand (int *hand1, int *hand2, int handSize);
 float analyzeHand(int *hand, int *deck, int *exclude, int excludeSize);
+float analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayCnt);
