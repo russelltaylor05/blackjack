@@ -1,19 +1,22 @@
-CC = gcc
+NVFLAGS=-g -O2 -arch=compute_20 -code=sm_20 
 
-SOURCES = poker.c
+# list .c and .cu source files here
+# use -02 for optimization during timed runs
 
-CFLAGS = -Wall -g
 
-all: poker
-	
-poker: poker.c pokerlib.o
-	${CC} ${CFLAGS} poker.c pokerlib.o -o poker	
+SRCFILES = main.cu 
+TARGET = ./poker
 
-pokerlib.o: pokerlib.c lookuptable.h
-	${CC} -c ${CFLAGS} pokerlib.c -o pokerlib.o
+all:	poker	
+
+poker: $(SRCFILES)
+	nvcc $(NVFLAGS) -o poker $^
+
+#pokerlib.o: pokerlib.cu lookuptable.h
+#	nvcc ${NVFLAGS} pokerlib.cu -o pokerlib.o
 
 run: poker
 	@./poker
 
-clean:
-	rm -rf *.o poker main strategy
+clean: 
+	rm -f *.o poker

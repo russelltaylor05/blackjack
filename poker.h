@@ -47,28 +47,31 @@ static char *value_str[] = {
 #define King	11
 #define Ace	12
 
-void    srand48();
-double  drand48();
+//__host__ __device__ void    srand48();
+//__host__ __device__ double  drand48();
 
-int findit( int key );
-void init_deck( int *deck );
-int find_card( int rank, int suit, int *deck );
-void shuffle_deck( int *deck );
-void print_hand( int *hand, int n );
-void print_card( int card );
-int hand_rank( short val );
-short eval_5cards( int c1, int c2, int c3, int c4, int c5 );
-short eval_5hand( int *hand );
-short eval_7hand( int *hand );
+__device__ int findit( int key );
+__device__ void init_deck( int *deck );
+__device__ int find_card( int rank, int suit, int *deck );
+__device__ void shuffle_deck( int *deck );
+__device__ void print_hand( int *hand, int n );
+__device__ void print_card( int card );
+__device__ int hand_rank( short val );
+__device__ short eval_5cards( int c1, int c2, int c3, int c4, int c5 );
+__device__ short eval_5hand( int *hand );
+__device__ short eval_7hand( int *hand );
+
+__global__ void analyze(int i);
 
 
-void setStaticHand (int *deck, int *hand);
-void setRandomHand (int *deck, int *hand, int *excludedCards, int excludeCnt) ; 
-void updateHand (int *deck, int *hand, int *throwAwayCards, int throwAwayCnt);
-int inArray (int value, int *array, int size);
-void printRankTable (int *deck);
-int findCardIndex (int *hand, int cardValue, int handSize);
-int getRandomCard(int *deck, int *exclude, int excludeSize);
-void copyHand (int *hand1, int *hand2, int handSize);
-float analyzeHand(int *hand, int *deck, int *exclude, int excludeSize);
-float analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayCnt);
+
+__device__ void setStaticHand (int *deck, int *hand);
+__device__ void setRandomHand (int *deck, int *hand, int *excludedCards, int excludeCnt) ; 
+__device__ void updateHand (int *deck, int *hand, int *throwAwayCards, int throwAwayCnt);
+__device__ int inArray (int value, int *array, int size);
+__device__ void printRankTable (int *deck);
+__device__ int findCardIndex (int *hand, int cardValue, int handSize);
+__device__ int getRandomCard(int *deck, int *exclude, int excludeSize);
+__device__ void copyHand (int *hand1, int *hand2, int handSize);
+__device__ float analyzeHand(int *hand, int *deck, int *exclude, int excludeSize);
+__device__ float analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayCnt);
