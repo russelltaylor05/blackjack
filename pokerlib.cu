@@ -3,7 +3,6 @@
 #include "poker.h"
 
 
-
 /* Picks 5 random cards and sets them in *hand
  * excludedCards will be excluded from random hand
  */
@@ -126,7 +125,7 @@ __device__ void printHandStats(int *hand, float results)
     print_hand(hand, HAND_SIZE);
     int score = eval_5hand(hand);
     int rank = hand_rank(score);
-    printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
+    //printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
 
 }
 
@@ -162,6 +161,6 @@ __device__ void printRankTable(int *deck)
   }
   printf("Frequency of Hands\n");
   for(i=1;i<=9;i++) {
-    printf( "%15s: %8d\n", value_str[i], freq[i] );
+    //printf( "%15s: %8d\n", value_str[i], freq[i] );
   }
 }
