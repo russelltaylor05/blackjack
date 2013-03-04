@@ -8,11 +8,16 @@ int main(int argc, char *argv[])
 {
   int deck[52], randomHand[HAND_SIZE], staticHand[HAND_SIZE];
   int score, rank;
-  int throwAwayCnt;
   int throwAwayCards[HAND_SIZE * 2];
-  int bestThrowAway[5];
+  int *bestThrowAway;
   int bestThrowAwaySize = 0;
   float results;
+
+  if (NULL == (bestThrowAway = malloc(sizeof(int) * 5)))
+  {
+     printf("Malloc Error\n");
+     exit(EXIT_FAILURE);
+  }
   
   /* seed the random number generator */
   srand48((int) time(NULL));
@@ -34,16 +39,11 @@ int main(int argc, char *argv[])
   results = analyzeHand(randomHand, deck, randomHand, HAND_SIZE);
   printf("Win Ration: %.2f%% \n\n", results);
   
-
-  /* Throw Away logic - Should be moved to a function */
-  /*printf("Throw Away First Two Cards: \n");
-  throwAwayCards[0] = randomHand[0];
-  throwAwayCards[1] = randomHand[1];
-  throwAwayCnt = 0;
-  results = analyzeThrowAway(randomHand, deck, throwAwayCards, throwAwayCnt);
-  printf("\nNew Win Ratio: %.2f%% \n\n", results);  */
-
-  analyzePrediction(randomHand, deck, bestThrowAway, bestThrowAwaySize);
+  /*Exhaustively analyze all possible throw away combinations*/
+  results = analyzePrediction(randomHand, deck, bestThrowAway, &bestThrowAwaySize);
+  printf("\n\nDiscard the follwing %i cards: ", bestThrowAwaySize);
+  print_hand(bestThrowAway, bestThrowAwaySize);
+  printf("\nTo acheieve %.2f%% odds of winning\n",results);
     
   return 0;
 }

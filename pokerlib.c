@@ -14,21 +14,20 @@ double  drand48();
  * end to determine what the best cards to throw away are (using inArray) and
  * these best throw away cards are returned via *bestThrowAway*/
 
-float analyzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowAwaySize)
+float analyzePrediction(int *hand, int *deck, int *bestThrowAway,
+      int *bestThrowAwaySize)
 {
    /*Loop variables*/
-   int i=0,j=0,k=0,l=0;
+   int i=0,j=0,k=0,l=0,m=0;
    /*Used to store which cards and return value give the best hand*/
    float bestWinPercent = 0.0, newWinPercent = 0.0;
    int newThrowAway[5];
    
-   /*Variables just used for testing*/
-   int m=0;
-   
    /*Replace one card*/
+   printf("Replacing one card...\n");
    for (i=0;i<5;i++)
    {
-      printf("Replacing one card with (%i)\n",i);
+      /*printf("Replacing one card with (%i)\n",i);*/
       newThrowAway[0] = hand[i];
       
       /*This will be changed from a += to simply an = when function works*/
@@ -39,16 +38,17 @@ float analyzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowA
       {
          bestThrowAway[0] = newThrowAway[0];
          bestWinPercent = newWinPercent;
-         bestThrowAwaySize = 1;
+         *bestThrowAwaySize = 1;
       }
    }
    
    /*Replace two cards*/
+   printf("Replacing two cards...\n");
    for (j=0; j<5; j++)
    {
       for (i=j+1; i<5; i++)
       {
-         printf("Replacing two cards (%i,%i)\n",i,j);
+         /*printf("Replacing two cards (%i,%i)\n",i,j);*/
          newThrowAway[0] = hand[i];
          newThrowAway[1] = hand[j];
          
@@ -61,19 +61,20 @@ float analyzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowA
             bestThrowAway[0] = newThrowAway[0];
             bestThrowAway[1] = newThrowAway[1];
             bestWinPercent = newWinPercent;
-            bestThrowAwaySize = 2;
+            *bestThrowAwaySize = 2;
          }
       }
    }
 
    /*Replace three cards*/
+   printf("Replacing three cards...\n");
    for (k=0; k<5; k++)
    {
       for (j=k+1; j<5; j++)
       {
          for (i=j+1; i<5; i++)
          {
-            printf("Replacing three cards (%i,%i,%i)\n",i,j,k);
+            /*printf("Replacing three cards (%i,%i,%i)\n",i,j,k);*/
             newThrowAway[0] = hand[i];
             newThrowAway[1] = hand[j];
             newThrowAway[2] = hand[k];
@@ -88,13 +89,14 @@ float analyzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowA
                bestThrowAway[1] = newThrowAway[1];
                bestThrowAway[2] = newThrowAway[2];
                bestWinPercent = newWinPercent;
-               bestThrowAwaySize = 3;
+               *bestThrowAwaySize = 3;
             }
          }
       }
    }
    
    /*Replace four cards*/
+   printf("Replacing four cards...\n");
    for (l=0; l<5; l++)
    {
       for (k=l+1; k<5; k++)
@@ -103,7 +105,7 @@ float analyzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowA
          {
             for (i=j+1; i<5; i++)
             {
-               printf("Replacing four cards (%i,%i,%i,%i)\n",i,j,k,l);
+               /*printf("Replacing four cards (%i,%i,%i,%i)\n",i,j,k,l);*/
                newThrowAway[0] = hand[i];
                newThrowAway[1] = hand[j];
                newThrowAway[2] = hand[k];
@@ -120,7 +122,7 @@ float analyzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowA
                   bestThrowAway[2] = newThrowAway[2];
                   bestThrowAway[3] = newThrowAway[3];
                   bestWinPercent = newWinPercent;
-                  bestThrowAwaySize = 4;
+                  *bestThrowAwaySize = 4;
                }
             }
          }
@@ -128,6 +130,7 @@ float analyzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowA
    }
    
    /*Replace five cards--just for fun, this will be hard coded*/
+   printf("Replacing five cards...\n");
    for (m=0; m<5; m++)
    {
       for (l=m+1; l<5; l++)
@@ -138,7 +141,7 @@ float analyzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowA
             {
                for (i=j+1; i<5; i++)
                {
-                  printf("Replacing five cards (%i,%i,%i,%i,%i)\n",i,j,k,l,m);
+                  /*printf("Replacing five cards (%i,%i,%i,%i,%i)\n",i,j,k,l,m);*/
                   newThrowAway[0] = hand[i];
                   newThrowAway[1] = hand[j];
                   newThrowAway[2] = hand[k];
@@ -157,7 +160,7 @@ float analyzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowA
                      bestThrowAway[3] = newThrowAway[3];
                      bestThrowAway[4] = newThrowAway[4];
                      bestWinPercent = newWinPercent;
-                     bestThrowAwaySize = 5;
+                     *bestThrowAwaySize = 5;
                   }
                }
             }
@@ -165,9 +168,9 @@ float analyzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowA
       }
    }
    
-   printf("Best Win Percentage is %.2f%%, by replacing %i cards\n",
-         bestWinPercent, bestThrowAwaySize);
-   
+   /*printf("INFUNCTION::Best Win Percentage is %.2f%%, by replacing %i cards\n",
+         bestWinPercent, *bestThrowAwaySize);*/
+
    return bestWinPercent;
 }
 
@@ -354,8 +357,6 @@ void printHandStats(int *hand, float results)
     printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
 
 }
-
-
 
 
 /* Print a table for frequency of each Hand by Rank */
