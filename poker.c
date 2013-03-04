@@ -10,6 +10,8 @@ int main(int argc, char *argv[])
   int score, rank;
   int throwAwayCnt;
   int throwAwayCards[HAND_SIZE * 2];
+  int bestThrowAway[5];
+  int bestThrowAwaySize = 0;
   float results;
   
   /* seed the random number generator */
@@ -31,15 +33,17 @@ int main(int argc, char *argv[])
 
   results = analyzeHand(randomHand, deck, randomHand, HAND_SIZE);
   printf("Win Ration: %.2f%% \n\n", results);
-   
+  
 
   /* Throw Away logic - Should be moved to a function */
-  printf("Throw Away First Two Cards: \n");
+  /*printf("Throw Away First Two Cards: \n");
   throwAwayCards[0] = randomHand[0];
   throwAwayCards[1] = randomHand[1];
   throwAwayCnt = 0;
   results = analyzeThrowAway(randomHand, deck, throwAwayCards, throwAwayCnt);
-  printf("\nNew Win Ratio: %.2f%% \n\n", results);  
+  printf("\nNew Win Ratio: %.2f%% \n\n", results);  */
+
+  analyzePrediction(randomHand, deck, bestThrowAway, bestThrowAwaySize);
     
   return 0;
 }

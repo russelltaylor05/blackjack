@@ -5,7 +5,171 @@
 void    srand48();
 double  drand48();
 
+/* This function uses many loops to ensure that all possible card combinations
+ * are analyzed.  It then compares each return of analyzeThrowAway and compares
+ * the win percentage returned to bestWinPercent and tracks the best win 
+ * percentage calculated.  Each time bestWinPercent is updated, it also
+ * updates bestThrowAwaySize depending on which loop block it is in, and also
+ * stores the card positions thrown away in a,b,c,d,e.  These are used at the
+ * end to determine what the best cards to throw away are (using inArray) and
+ * these best throw away cards are returned via *bestThrowAway*/
 
+float analyzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowAwaySize)
+{
+   /*Loop variables*/
+   int i=0,j=0,k=0,l=0;
+   /*Used to store which cards and return value give the best hand*/
+   float bestWinPercent = 0.0, newWinPercent = 0.0;
+   int newThrowAway[5];
+   
+   /*Variables just used for testing*/
+   int m=0;
+   
+   /*Replace one card*/
+   for (i=0;i<5;i++)
+   {
+      printf("Replacing one card with (%i)\n",i);
+      newThrowAway[0] = hand[i];
+      
+      /*This will be changed from a += to simply an = when function works*/
+      newWinPercent = analyzeThrowAway(hand,deck,newThrowAway,1);
+      
+      /*Check if we found a new best win percentage!*/
+      if (bestWinPercent < newWinPercent)
+      {
+         bestThrowAway[0] = newThrowAway[0];
+         bestWinPercent = newWinPercent;
+         bestThrowAwaySize = 1;
+      }
+   }
+   
+   /*Replace two cards*/
+   for (j=0; j<5; j++)
+   {
+      for (i=j+1; i<5; i++)
+      {
+         printf("Replacing two cards (%i,%i)\n",i,j);
+         newThrowAway[0] = hand[i];
+         newThrowAway[1] = hand[j];
+         
+         /*This will be changed from a += to simply an = when function works*/
+         newWinPercent = analyzeThrowAway(hand,deck,newThrowAway,2);
+         
+         /*Check if we found a new best win percentage!*/
+         if (bestWinPercent < newWinPercent)
+         {
+            bestThrowAway[0] = newThrowAway[0];
+            bestThrowAway[1] = newThrowAway[1];
+            bestWinPercent = newWinPercent;
+            bestThrowAwaySize = 2;
+         }
+      }
+   }
+
+   /*Replace three cards*/
+   for (k=0; k<5; k++)
+   {
+      for (j=k+1; j<5; j++)
+      {
+         for (i=j+1; i<5; i++)
+         {
+            printf("Replacing three cards (%i,%i,%i)\n",i,j,k);
+            newThrowAway[0] = hand[i];
+            newThrowAway[1] = hand[j];
+            newThrowAway[2] = hand[k];
+            
+            /*This will be changed from a += to simply an = when function works*/
+            newWinPercent = analyzeThrowAway(hand,deck,newThrowAway,3);
+            
+            /*Check if we found a new best win percentage!*/
+            if (bestWinPercent < newWinPercent)
+            {
+               bestThrowAway[0] = newThrowAway[0];
+               bestThrowAway[1] = newThrowAway[1];
+               bestThrowAway[2] = newThrowAway[2];
+               bestWinPercent = newWinPercent;
+               bestThrowAwaySize = 3;
+            }
+         }
+      }
+   }
+   
+   /*Replace four cards*/
+   for (l=0; l<5; l++)
+   {
+      for (k=l+1; k<5; k++)
+      {
+         for (j=k+1; j<5; j++)
+         {
+            for (i=j+1; i<5; i++)
+            {
+               printf("Replacing four cards (%i,%i,%i,%i)\n",i,j,k,l);
+               newThrowAway[0] = hand[i];
+               newThrowAway[1] = hand[j];
+               newThrowAway[2] = hand[k];
+               newThrowAway[3] = hand[l];
+               
+               /*This will be changed from a += to simply an = when function works*/
+               newWinPercent = analyzeThrowAway(hand,deck,newThrowAway,4);
+               
+               /*Check if we found a new best win percentage!*/
+               if (bestWinPercent < newWinPercent)
+               {
+                  bestThrowAway[0] = newThrowAway[0];
+                  bestThrowAway[1] = newThrowAway[1];
+                  bestThrowAway[2] = newThrowAway[2];
+                  bestThrowAway[3] = newThrowAway[3];
+                  bestWinPercent = newWinPercent;
+                  bestThrowAwaySize = 4;
+               }
+            }
+         }
+      }
+   }
+   
+   /*Replace five cards--just for fun, this will be hard coded*/
+   for (m=0; m<5; m++)
+   {
+      for (l=m+1; l<5; l++)
+      {
+         for (k=l+1; k<5; k++)
+         {
+            for (j=k+1; j<5; j++)
+            {
+               for (i=j+1; i<5; i++)
+               {
+                  printf("Replacing five cards (%i,%i,%i,%i,%i)\n",i,j,k,l,m);
+                  newThrowAway[0] = hand[i];
+                  newThrowAway[1] = hand[j];
+                  newThrowAway[2] = hand[k];
+                  newThrowAway[3] = hand[l];
+                  newThrowAway[4] = hand[m];
+                  
+                  /*This will be changed from a += to simply an = when function works*/
+                  newWinPercent = analyzeThrowAway(hand,deck,newThrowAway,5);
+                  
+                  /*Check if we found a new best win percentage!*/
+                  if (bestWinPercent < newWinPercent)
+                  {
+                     bestThrowAway[0] = newThrowAway[0];
+                     bestThrowAway[1] = newThrowAway[1];
+                     bestThrowAway[2] = newThrowAway[2];
+                     bestThrowAway[3] = newThrowAway[3];
+                     bestThrowAway[4] = newThrowAway[4];
+                     bestWinPercent = newWinPercent;
+                     bestThrowAwaySize = 5;
+                  }
+               }
+            }
+         }
+      }
+   }
+   
+   printf("Best Win Percentage is %.2f%%, by replacing %i cards\n",
+         bestWinPercent, bestThrowAwaySize);
+   
+   return bestWinPercent;
+}
 
 /* Generates new random cards specified in throwAwayCards
  * returns avergae win % of new hands compared against random dealer hands
