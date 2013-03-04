@@ -47,8 +47,6 @@ static char *value_str[] = {
 #define King	11
 #define Ace	12
 
-//__host__ __device__ void    srand48();
-//__host__ __device__ double  drand48();
 
 __device__ int findit( int key );
 __device__ void init_deck( int *deck );
@@ -62,7 +60,6 @@ __device__ short eval_5hand( int *hand );
 __device__ short eval_7hand( int *hand );
 
 __global__ void analyze(int i);
-
 
 
 __device__ void setStaticHand (int *deck, int *hand);

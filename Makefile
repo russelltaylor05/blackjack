@@ -7,13 +7,13 @@ NVFLAGS=-g -O2 -arch=compute_20 -code=sm_20
 SRCFILES = main.cu 
 TARGET = ./poker
 
-all:	poker	
+all:	poker
 
-poker: $(SRCFILES)
+poker: $(SRCFILES) pokerlib.o
 	nvcc $(NVFLAGS) -o poker $^
 
-#pokerlib.o: pokerlib.cu lookuptable.h
-#	nvcc ${NVFLAGS} pokerlib.cu -o pokerlib.o
+pokerlib.o: pokerlib.cu
+	nvcc ${NVFLAGS} pokerlib.cu -o pokerlib.o
 
 run: poker
 	@./poker
