@@ -72,3 +72,4 @@ int getRandomCard(int *deck, int *exclude, int excludeSize);
 void copyHand (int *hand1, int *hand2, int handSize);
 float analyzeHand(int *hand, int *deck, int *exclude, int excludeSize);
 float analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayCnt);
+float analyzePrediction(int *hand, int *deck, int *bestThrowAway, int bestThrowAwaySize);
