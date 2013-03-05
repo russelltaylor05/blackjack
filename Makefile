@@ -9,15 +9,12 @@ TARGET = ./poker
 
 all:	poker
 
-poker: $(SRCFILES) pokerlib.o
+poker: $(SRCFILES)
 	nvcc $(NVFLAGS) -o poker $^
 
 poker2: $(SRCFILES)
 	nvcc $(NVFLAGS) -o poker $^
 
-
-pokerlib.o: pokerlib.cu lookuptable.h
-	nvcc ${NVFLAGS} pokerlib.cu -o pokerlib.o
 
 run: poker
 	@./poker

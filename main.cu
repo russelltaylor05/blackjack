@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
   
   HANDLE_ERROR(cudaMalloc(&dev_a, sizeof(int)));
 
-  analyze<<<1,10>>>(1);
+  analyzeHand<<<1,10>>>(1);
   
   HANDLE_ERROR(cudaMemcpy(a, dev_a, sizeof(int), cudaMemcpyDeviceToHost));
 
