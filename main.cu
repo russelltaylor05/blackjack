@@ -17,16 +17,42 @@ static void HandleError( cudaError_t err, const char * file, int line)
 
 int main(int argc, char *argv[])
 {
+  int deck[52], randomHand[HAND_SIZE], staticHand[HAND_SIZE];
+  float analyzeResults[ANALYZE_RESOLUTION];
+  int size;
+  int throwAwayCards[10];
+  
+  int *devDeck;
+  int *devHand;
+  float *devAnalyzeResults;
+  
+  /* initialize the deck */
+  init_deck(deck);
+  
+  /* Set Hands */
+  setStaticHand(deck, staticHand);  
+  //setRandomHand(deck, randomHand, throwAwayCards, 0);   
 
-  int *dev_a, *a;
-  
-  a = (int *) malloc(sizeof(int));
-  
-  HANDLE_ERROR(cudaMalloc(&dev_a, sizeof(int)));
 
-  analyzeHand<<<1,10>>>(1);
+  print_hand(staticHand, HAND_SIZE);
+  printf("\n");
   
-  HANDLE_ERROR(cudaMemcpy(a, dev_a, sizeof(int), cudaMemcpyDeviceToHost));
+  size = HAND_SIZE * sizeof(int);
+  HANDLE_ERROR(cudaMalloc(&devHand, HAND_SIZE * sizeof(int)));
+  HANDLE_ERROR(cudaMemcpy(devHand, staticHand, size, cudaMemcpyHostToDevice));
+
+  size = 52 * sizeof(int);
+  HANDLE_ERROR(cudaMalloc(&devDeck, 52 * sizeof(int)));
+  HANDLE_ERROR(cudaMemcpy(devDeck, deck, size, cudaMemcpyHostToDevice));
+
+  size = ANALYZE_RESOLUTION * sizeof(float);
+  HANDLE_ERROR(cudaMalloc(&devAnalyzeResults, size));  
+
+  analyzeHand<<<1,10>>>(devHand, devDeck, devHand, HAND_SIZE, devAnalyzeResults);
+  
+  size = ANALYZE_RESOLUTION * sizeof(float);
+  HANDLE_ERROR(cudaMemcpy(analyzeResults, devAnalyzeResults, size, cudaMemcpyDeviceToHost));
+
 
   return 0;
 }

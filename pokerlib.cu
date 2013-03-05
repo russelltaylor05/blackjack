@@ -8,6 +8,7 @@
 /* Generates new random cards specified in throwAwayCards
  * returns avergae win % of new hands compared against random dealer hands
  */ 
+ /*
 __global__ void analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayCnt)
 {
   float results, resultsTotal = 0;
@@ -18,7 +19,6 @@ __global__ void analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int 
   copyHand(excludeCards, hand, HAND_SIZE);
   copyHand(originalHand, hand, HAND_SIZE);
 
-  /* Add throw away cards to exclude list */
   for (i = 0; i < throwAwayCnt; i++) {
     excludeCards[HAND_SIZE + i] = throwAwayCards[i];
   }  
@@ -40,25 +40,21 @@ __global__ void analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int 
   
   return resultsTotal / THROWAWAY_RESOLUTION;
 }
-
+*/
 
 /* Returns: %chance that hand will win */ 
-__global__ void analyzeHand(int *hand, int *deck, int *exclude, int excludeSize)
+__global__ void analyzeHand(int *hand, int *deck, int *exclude, int excludeSize, float *devAnalyzeResults)
 {
-  int resolution = ANALYZE_RESOLUTION;
   int tempHand[HAND_SIZE];
-  int handScore, tempScore, i;
-  int wins = 0;
+  int tempScore;
+  int handScore;
 
-  handScore = eval_5hand(hand);  
-  for(i = 0; i < resolution; i++) {
-    setRandomHand(deck, tempHand, hand, HAND_SIZE);
-    tempScore = eval_5hand(tempHand);
-    if(handScore < tempScore) {
-      wins++;
-    }
-  }  
-  return (float)wins / (float)resolution * 100.00;
+  handScore = eval_5hand(hand);
+  setRandomHand(deck, tempHand, hand, HAND_SIZE);
+  tempScore = eval_5hand(tempHand);
+  
+  devAnalyzeResults[threadIdx.x] = (handScore > tempScore);
+
 }
 
 
@@ -70,7 +66,7 @@ __device__ void setRandomHand(int *deck, int *hand, int *excludedCards, int excl
 {
   int i;  
   int excludedCardsTemp[HAND_SIZE * 2];
-
+    
   /* Copy exclude cards to new temp array */
   copyHand(excludedCardsTemp, excludedCards, excludeCnt);
   
@@ -78,6 +74,7 @@ __device__ void setRandomHand(int *deck, int *hand, int *excludedCards, int excl
    * it to the excludedCardsTemp array so that it won't
    * get choosen again.
    */
+
   for(i = 0; i < HAND_SIZE; i++) {
     hand[i] = getRandomCard(deck, excludedCardsTemp, excludeCnt);
     excludedCardsTemp[excludeCnt] = hand[i];
@@ -128,7 +125,7 @@ __device__ int getRandomCard(int *deck, int *exclude, int excludeSize)
  * Check out poker.h for the #define variables
  * Assumes deck is initialized
  */
-__device__ void setStaticHand(int *deck, int *hand) 
+void setStaticHand(int *deck, int *hand) 
 {
   int cardIndex = 0;
   
@@ -266,7 +263,7 @@ __device__ int findit( int key )
 //   cdhs = suit of card
 //   b = bit turned on depending on rank of card
 //
-__device__ void init_deck( int *deck )
+__host__ __device__ void init_deck( int *deck )
 {
     int i, j, n = 0, suit = 0x8000;
 
@@ -281,7 +278,7 @@ __device__ void init_deck( int *deck )
 //  the position of the found card.  If it is not found,
 //  then it returns -1
 //
-__device__  int find_card( int rank, int suit, int *deck )
+__host__ __device__  int find_card( int rank, int suit, int *deck )
 {
 	int i, c;
 
@@ -308,16 +305,16 @@ __device__  void shuffle_deck( int *deck )
 
     for ( i = 0; i < 52; i++ )
     {
-        do {
-            n = (int)(51.9999999 * 1); //drand48());
-        } while ( temp[n] == 0 );
+        //do {
+            //n = (int)(51.9999999 * 0.5); //drand48());
+        //} while ( temp[n] == 0 );
         deck[i] = temp[n];
         temp[n] = 0;
     }
 }
 
 
-__device__ void print_hand( int *hand, int n )
+__host__ __device__ void print_hand( int *hand, int n )
 {
     int i, r;
     char suit;
@@ -340,7 +337,7 @@ __device__ void print_hand( int *hand, int n )
     }
 }
 
-__device__ void print_card(int card) 
+__host__ __device__ void print_card(int card) 
 {
   int r;
   char suit;

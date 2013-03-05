@@ -47,11 +47,11 @@ static char *value_str[] = {
 #define King	11
 #define Ace	12
 
-__global__ void analyzeHand(int *hand, int *deck, int *exclude, int excludeSize);
+__global__ void analyzeHand(int *hand, int *deck, int *exclude, int excludeSize, float *devAnalyzeResults);
 __global__ void analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayCnt);
 
 
-__device__ void setStaticHand (int *deck, int *hand);
+void setStaticHand (int *deck, int *hand);
 __device__ void setRandomHand (int *deck, int *hand, int *excludedCards, int excludeCnt) ; 
 __device__ void updateHand (int *deck, int *hand, int *throwAwayCards, int throwAwayCnt);
 __device__ int inArray (int value, int *array, int size);
@@ -61,11 +61,11 @@ __device__ int getRandomCard(int *deck, int *exclude, int excludeSize);
 __device__ void copyHand (int *hand1, int *hand2, int handSize);
 
 __device__ int findit( int key );
-__device__ void init_deck( int *deck );
-__device__ int find_card( int rank, int suit, int *deck );
+__host__ __device__ void init_deck( int *deck );
+__host__ __device__ int find_card( int rank, int suit, int *deck );
 __device__ void shuffle_deck( int *deck );
-__device__ void print_hand( int *hand, int n );
-__device__ void print_card( int card );
+__host__ __device__ void print_hand( int *hand, int n );
+__host__ __device__ void print_card( int card );
 __device__ int hand_rank( short val );
 __device__ short eval_5cards( int c1, int c2, int c3, int c4, int c5 );
 __device__ short eval_5hand( int *hand );
