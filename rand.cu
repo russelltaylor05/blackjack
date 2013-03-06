@@ -62,9 +62,9 @@ __global__ void generate_uniform_kernel(curandState *state,
     /* Copy state to local memory for efficiency */
     curandState localState = state[id];
     /* Generate pseudo-random uniforms */
-    for(int n = 0; n < 10000; n++) {
+    for(int n = 0; n < 10; n++) {
         x = curand_uniform(&localState);
-        /* Check if > .5 */
+        /* Check if > .5 */        
         if(x > .5) {
             count++;
         }
@@ -202,20 +202,16 @@ int main(int argc, char *argv[])
     hostResults = (unsigned int *)calloc(64 * 64, sizeof(int));
 
     /* Allocate space for results on device */
-    CUDA_CALL(cudaMalloc((void **)&devResults, 64 * 64 * 
-              sizeof(unsigned int)));
+    CUDA_CALL(cudaMalloc((void **)&devResults, 64 * 64 * sizeof(unsigned int)));
 
     /* Set results to 0 */
-    CUDA_CALL(cudaMemset(devResults, 0, 64 * 64 * 
-              sizeof(unsigned int)));
+    CUDA_CALL(cudaMemset(devResults, 0, 64 * 64 * sizeof(unsigned int)));
 
     /* Allocate space for prng states on device */
     if (!useMRG) {
-        CUDA_CALL(cudaMalloc((void **)&devStates, 64 * 64 * 
-                  sizeof(curandState)));
+        CUDA_CALL(cudaMalloc((void **)&devStates, 64 * 64 * sizeof(curandState)));
     } else {
-        CUDA_CALL(cudaMalloc((void **)&devMRGStates, 64 * 64 * 
-                  sizeof(curandStateMRG32k3a)));
+        CUDA_CALL(cudaMalloc((void **)&devMRGStates, 64 * 64 * sizeof(curandStateMRG32k3a)));
     }
     
     /* Setup prng states */

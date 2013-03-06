@@ -4,7 +4,7 @@
 ** mean that combination is not possible with a five-card
 ** flush hand.
 */
-__constant__ short flushes[] = {
+__device__ short flushes[] = {
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 1599, 0, 0, 0, 0, 0, 0, 0, 1598, 0, 0, 0, 1597, 0, 1596,
@@ -428,7 +428,7 @@ __constant__ short flushes[] = {
 ** of five unique ranks (i.e.  either Straights or High Card
 ** hands).  it's similar to the above "flushes" array.
 */
-__constant__  short unique5[] = {
+__device__  short unique5[] = {
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 1608, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 7462, 0, 0, 0, 0, 0, 0, 0, 7461, 0, 0,  0,  7460,  0,
@@ -854,7 +854,7 @@ __constant__  short unique5[] = {
 };
 
 
-__constant__ int products[] = {
+__device__ int products[] = {
 48, 72, 80, 108, 112, 120, 162, 168, 176,  180,  200,  208,  252,
 264,  270, 272, 280, 300, 304, 312, 368, 378, 392, 396, 405, 408,
 420, 440, 450, 456, 464, 468, 496, 500, 520, 552, 567, 588,  592,
@@ -1483,7 +1483,7 @@ __constant__ int products[] = {
 };
 
 
-__constant__ short  values[] = {
+__device__ short  values[] = {
 166, 322, 165, 310, 164, 2467, 154, 2466, 163,  3325,  321,  162,
 3324,  2464,  2401,  161,  2465, 3314, 160, 2461, 159, 2400, 320,
 3323, 153, 2457, 6185, 2463, 3303, 2452,  158,  3322,  157,  298,
@@ -1942,9 +1942,9 @@ __constant__ short  values[] = {
 ** king  = 37
 ** ace   = 41
 */
-__constant__ int primes[] = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41 };
+__device__ int primes[] = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41 };
 
-__constant__ int perm7[21][5] = {
+__device__ int perm7[21][5] = {
   { 0, 1, 2, 3, 4 },
   { 0, 1, 2, 3, 5 },
   { 0, 1, 2, 3, 6 },

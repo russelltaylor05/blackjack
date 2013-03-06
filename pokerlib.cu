@@ -1,8 +1,9 @@
 #include <stdio.h>
+#include <cuda.h>
+#include <time.h>
+#include <curand_kernel.h>
 #include "lookuptable.h"
 #include "poker.h"
-
-
 
 
 /* Generates new random cards specified in throwAwayCards
@@ -42,18 +43,40 @@ __global__ void analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int 
 }
 */
 
+
 /* Returns: %chance that hand will win */ 
-__global__ void analyzeHand(int *hand, int *deck, int *exclude, int excludeSize, float *devAnalyzeResults)
+__global__ void analyzeHand(int *hand, int *exclude, int excludeSize, float *devAnalyzeResults, curandState *state)
 {
+
   int tempHand[HAND_SIZE];
   int tempScore;
-  int handScore;
+  int handScore;    
+  int id = threadIdx.x;
+
+  curand_init(1234, id, 0, &state[id]);  
+  curandState localState = state[id];
+  
+  int deck[52];
+  init_deck(deck);
+
+  shuffle_deck(deck, localState);
+  
+  printf("time: %d",time(NULL));
+  //printf("\n\n%d) %d\n",id, deck2[0]);
+  /*
+  for(i = 0; i < 10; i++) {
+    x = curand_uniform(&localState);
+    printf("%d) %f\n",id, x);
+  }
+  */
+
+  
 
   handScore = eval_5hand(hand);
-  setRandomHand(deck, tempHand, hand, HAND_SIZE);
+  setRandomHand(deck, tempHand, hand, HAND_SIZE, localState);
   tempScore = eval_5hand(tempHand);
-  
-  devAnalyzeResults[threadIdx.x] = (handScore > tempScore);
+  print_hand(tempHand, HAND_SIZE);
+  //devAnalyzeResults[threadIdx.x] = (handScore > tempScore);
 
 }
 
@@ -62,7 +85,7 @@ __global__ void analyzeHand(int *hand, int *deck, int *exclude, int excludeSize,
 /* Picks 5 random cards and sets them in *hand
  * excludedCards will be excluded from random hand
  */
-__device__ void setRandomHand(int *deck, int *hand, int *excludedCards, int excludeCnt) 
+__device__ void setRandomHand(int *deck, int *hand, int *excludedCards, int excludeCnt, curandState localState) 
 {
   int i;  
   int excludedCardsTemp[HAND_SIZE * 2];
@@ -76,7 +99,7 @@ __device__ void setRandomHand(int *deck, int *hand, int *excludedCards, int excl
    */
 
   for(i = 0; i < HAND_SIZE; i++) {
-    hand[i] = getRandomCard(deck, excludedCardsTemp, excludeCnt);
+    hand[i] = getRandomCard(deck, excludedCardsTemp, excludeCnt, localState);
     excludedCardsTemp[excludeCnt] = hand[i];
     excludeCnt++;    
   }
@@ -85,7 +108,7 @@ __device__ void setRandomHand(int *deck, int *hand, int *excludedCards, int excl
 
 /* Updates a hand's cards specified by throwAwayCards[]
  */
-__device__ void updateHand(int *deck, int *hand, int *throwAwayCards, int throwAwayCnt)
+__device__ void updateHand(int *deck, int *hand, int *throwAwayCards, int throwAwayCnt, curandState localState)
 {
   int index, i = 0;
   int excludeCnt = HAND_SIZE;
@@ -102,17 +125,17 @@ __device__ void updateHand(int *deck, int *hand, int *throwAwayCards, int throwA
    */
   for(i = 0; i < throwAwayCnt; i++) {    
     index = findCardIndex(hand, throwAwayCards[i], HAND_SIZE);
-    hand[index] = getRandomCard(deck, excludedCards, excludeCnt);
+    hand[index] = getRandomCard(deck, excludedCards, excludeCnt, localState);
     excludedCards[excludeCnt] = hand[index];
     excludeCnt++;
   }
 }
 
 /* Returns random card VALUE that is not in exclude array */
-__device__ int getRandomCard(int *deck, int *exclude, int excludeSize) 
+__device__ int getRandomCard(int *deck, int *exclude, int excludeSize, curandState localState) 
 {
   int i = 0;  
-  shuffle_deck(deck);
+  shuffle_deck(deck, localState);
   while(inArray(deck[i], exclude, excludeSize )) {
     i++;
   }
@@ -296,45 +319,58 @@ __host__ __device__  int find_card( int rank, int suit, int *deck )
 //  This routine takes a deck and randomly mixes up
 //  the order of the cards.
 //
-__device__  void shuffle_deck( int *deck )
+__device__ void shuffle_deck(int *deck, curandState localState)
 {
     int i, n, temp[52];
+
+  //printf("%d) %f\n", threadIdx.x, curand_uniform(&localState));    
+  //printf("%d) %f\n", threadIdx.x, curand_uniform(&localState));    
 
     for ( i = 0; i < 52; i++ )
         temp[i] = deck[i];
 
     for ( i = 0; i < 52; i++ )
     {
-        //do {
-            //n = (int)(51.9999999 * 0.5); //drand48());
-        //} while ( temp[n] == 0 );
+        do {
+            n = (int)(51.9999999 * curand_uniform(&localState));            
+        } while ( temp[n] == 0 );        
         deck[i] = temp[n];
         temp[n] = 0;
+        //printf("%d-%d[%d],", threadIdx.x, i, deck[i]);
     }
+    //printf("%d,", deck[0]);
 }
 
 
 __host__ __device__ void print_hand( int *hand, int n )
 {
-    int i, r;
-    char suit;
-    char *rank = "23456789TJQKA";
+  int i, r;
+  char suit;
+  char *rank = "23456789TJQKA";
+  char handString[17];
+  int pnt = 0;
 
-    for ( i = 0; i < n; i++ ) 
-    {
-        r = (*hand >> 8) & 0xF;
-        if ( *hand & 0x8000 )
-            suit = 'c';
-        else if ( *hand & 0x4000 )
-            suit = 'd';
-        else if ( *hand & 0x2000 )
-            suit = 'h';
-        else
-            suit = 's';
+  for ( i = 0; i < n; i++ ) 
+  {
+      r = (*hand >> 8) & 0xF;
+      if ( *hand & 0x8000 )
+          suit = 'c';
+      else if ( *hand & 0x4000 )
+          suit = 'd';
+      else if ( *hand & 0x2000 )
+          suit = 'h';
+      else
+          suit = 's';
 
-        printf( "%c%c ", rank[r], suit );
-        hand++;
-    }
+      handString[pnt++] = rank[r];
+      handString[pnt++] = suit;
+      handString[pnt++] = ' ';
+      
+      hand++;
+  }
+  handString[pnt++] = '\n';
+  handString[pnt] = '\0';
+  printf("%s", handString);
 }
 
 __host__ __device__ void print_card(int card) 

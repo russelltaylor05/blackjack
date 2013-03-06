@@ -5,12 +5,16 @@ NVFLAGS= -g -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include
 
 
 SRCFILES = main.cu pokerlib.cu
+RANDFILES = rand.cu
 TARGET = ./poker
 
 all:	poker
 
 poker: $(SRCFILES)
 	nvcc $(NVFLAGS) -o poker $^
+	
+rand: $(RANDFILES)
+	nvcc $(NVFLAGS) -o rand $^
 
 
 run: poker
