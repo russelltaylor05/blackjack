@@ -180,12 +180,12 @@ float analyzePrediction(int *hand, int *deck, int *bestThrowAway,
 float analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayCnt)
 {
   float results, resultsTotal = 0;
-  int excludeCards[HAND_SIZE*2], originalHand[HAND_SIZE];
+  int excludeCards[HAND_SIZE*2], duplicateHand[HAND_SIZE];
   int score, rank, i;
   int excludeCnt = HAND_SIZE + throwAwayCnt;
   
   copyHand(excludeCards, hand, HAND_SIZE);
-  copyHand(originalHand, hand, HAND_SIZE);
+  copyHand(duplicateHand, hand, HAND_SIZE);
 
   /* Add throw away cards to exclude list */
   for (i = 0; i < throwAwayCnt; i++) {
@@ -194,19 +194,19 @@ float analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayC
   
   for(i = 0; i < THROWAWAY_RESOLUTION; i++) {
 
-    copyHand(hand, originalHand, HAND_SIZE);
-    updateHand(deck, hand, throwAwayCards, throwAwayCnt);   
+    copyHand(duplicateHand, hand, HAND_SIZE);
+    updateHand(deck, duplicateHand, throwAwayCards, throwAwayCnt);   
 
-    results = analyzeHand(hand, deck, excludeCards, excludeCnt);
+    results = analyzeHand(duplicateHand, deck, excludeCards, excludeCnt);
     
-    print_hand(hand, HAND_SIZE);
-    score = eval_5hand(hand);
+    print_hand(duplicateHand, HAND_SIZE);
+    score = eval_5hand(duplicateHand);
     rank = hand_rank(score);
     printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
     
     resultsTotal += results;    
   }
-  
+
   return resultsTotal / THROWAWAY_RESOLUTION;
 }
 

@@ -2,3 +2,4 @@
 strategy
 poker
 *.o
+*.out

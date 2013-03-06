@@ -6,12 +6,12 @@
 
 int main(int argc, char *argv[])
 {
-  int deck[52], randomHand[HAND_SIZE], staticHand[HAND_SIZE];
+  int deck[52], randomHand[HAND_SIZE];
   int score, rank;
   int throwAwayCards[HAND_SIZE * 2];
   int *bestThrowAway;
   int bestThrowAwaySize = 0;
-  float results;
+  float originalResults, newResults;
 
   if (NULL == (bestThrowAway = malloc(sizeof(int) * 5)))
   {
@@ -25,9 +25,8 @@ int main(int argc, char *argv[])
   /* initialize the deck */
   init_deck(deck);
   
-  /* Set Hands */
-  setStaticHand(deck, staticHand);  
-  setRandomHand(deck, randomHand, throwAwayCards, 0);   
+  /* Set Hand */
+  setRandomHand(deck, randomHand, throwAwayCards, 0);
 
   /* Random Hand */
   printf("\nRandom Hand: ");
@@ -36,14 +35,24 @@ int main(int argc, char *argv[])
   rank = hand_rank(score);      
   printf("\nScore: %s (%d)\n", value_str[rank], score);
 
-  results = analyzeHand(randomHand, deck, randomHand, HAND_SIZE);
-  printf("Win Ration: %.2f%% \n\n", results);
+  originalResults = analyzeHand(randomHand, deck, randomHand, HAND_SIZE);
+  printf("Win Ration: %.2f%% \n\n", originalResults);
   
   /*Exhaustively analyze all possible throw away combinations*/
-  results = analyzePrediction(randomHand, deck, bestThrowAway, &bestThrowAwaySize);
-  printf("\n\nDiscard the follwing %i cards: ", bestThrowAwaySize);
+  newResults = analyzePrediction(randomHand, deck, bestThrowAway, &bestThrowAwaySize);
+
+  /* Original Hand */
+  printf("\nOriginal Hand: ");
+  print_hand(randomHand, HAND_SIZE);
+  score = eval_5hand(randomHand);
+  rank = hand_rank(score);      
+  printf("\nScore: %s (%d)\n", value_str[rank], score);
+  printf("Win Ration: %.2f%% \n", originalResults);
+
+  /* Exhaustive Results*/
+  printf("\nDiscard the follwing %i cards: ", bestThrowAwaySize);
   print_hand(bestThrowAway, bestThrowAwaySize);
-  printf("\nTo acheieve %.2f%% odds of winning\n",results);
+  printf("\nTo acheieve %.2f%% odds of winning\n",newResults);
     
   return 0;
 }
