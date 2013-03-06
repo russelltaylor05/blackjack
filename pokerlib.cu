@@ -5,13 +5,27 @@
 #include "poker.h"
 
 
+__device__ void print_bits_dev(int number ){
+   unsigned long mask = 1 << 30;
+   int cnt = 1;
+   while(mask){
+      (mask & number) ? printf("X") : printf(".");
+      mask = mask >> 1 ; 
+      if(!(cnt % 8)){
+         printf("|");
+      }
+      cnt++;
+   }
+   printf("\n");
+}
+
 __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAnalyzeResults, curandState *state)
 {
 
   int tempHand[HAND_SIZE];
   int tempScore;
-  int handScore;    
-  int index = threadIdx.x;
+  int handScore, rank;    
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
   int i;
 
   curand_init(1234, index, 0, &state[index]); /* need to seed by time */  
@@ -22,37 +36,63 @@ __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAn
 
   //shuffle_deck(deck, localState);  
   //printf("\n\n%d) %d\n",id, deck2[0]);
+  
+  setStaticHandDev(deck, hand);
 
   handScore = eval_5hand(hand);
+  rank = hand_rank(handScore);  
   if(index == 0) {
-    printf("GPU Hand: \n");
-    print_hand(hand, HAND_SIZE);
+    printf("GPU Hand: ");
+    print_hand(hand, HAND_SIZE);    
+    printf("%s\n", value_str[rank]);    
+    /*
+    print_bits_dev(hand[0]);
+    print_bits_dev(hand[1]);
+    print_bits_dev(hand[2]);
+    print_bits_dev(hand[3]);
+    print_bits_dev(hand[4]);
+    */
   }
 
-  
   setRandomHand(deck, tempHand, hand, HAND_SIZE, localState);
   tempScore = eval_5hand(tempHand);
   
-  
-  
+    
   devAnalyzeResults[index] =  (handScore < tempScore);
   printf("%d)\t[%d]\t%d/%d\n", index, devAnalyzeResults[index], tempScore, handScore);
   //printHandStats(tempHand);
 
 
-  for (i = ANALYZE_RESOLUTION/2;  i > 0; i >>= 1) {
+  /* Sum Redux */
+  for (i = ANALYZE_RESOLUTION / 2;  i > 0; i >>= 1) {
     __syncthreads();
     if(index < i) {
       devAnalyzeResults[index] = devAnalyzeResults[index] + devAnalyzeResults[index + i];
     }
   } 
-
+  
+  __syncthreads();
   if(index == 0) {
     printf("Score: %d\n", devAnalyzeResults[index]);
   }
 
 }
 
+__device__ void setStaticHandDev(int *deck, int *hand) 
+{
+  int cardIndex = 0;
+  
+  cardIndex = find_card(Nine, DIAMOND, deck);
+  hand[0] = deck[cardIndex];  
+  cardIndex = find_card(Ten, HEART, deck);
+  hand[1] = deck[cardIndex];
+  cardIndex = find_card(Queen, SPADE, deck);
+  hand[2] = deck[cardIndex];
+  cardIndex = find_card(Queen, HEART, deck);
+  hand[3] = deck[cardIndex];
+  cardIndex = find_card(King, HEART, deck);
+  hand[4] = deck[cardIndex];
+}
 
 
 /* Picks 5 random cards and sets them in *hand
@@ -203,6 +243,7 @@ __host__ __device__ int findit( int key )
 {
     int low = 0, high = 4887, mid;
 
+    //printf("key: %d", key);
     while ( low <= high )
     {
         mid = (high+low) >> 1;      // divide by two
@@ -389,6 +430,7 @@ __host__ __device__ short eval_5hand( int *hand )
   c3 = *hand++;
   c4 = *hand++;
   c5 = *hand;
+  
   return( eval_5cards(c1,c2,c3,c4,c5) );
 }
 

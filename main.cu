@@ -18,14 +18,26 @@ static void HandleError( cudaError_t err, const char * file, int line)
     printf("Error at %s:%d\n",__FILE__,__LINE__); \
     return EXIT_FAILURE;}} while(0)
 
+void print_bits(int number ){
+   unsigned long mask = 1 << 30;
+   int cnt = 1;
+   while(mask){
+      (mask & number) ? printf("X") : printf(".");
+      mask = mask >> 1 ; 
+      if(!(cnt % 8)){
+         putchar('|');
+      }
+      cnt++;
+   }
+   putchar('\n');
+}
+
 
 int main(int argc, char *argv[])
 {
   int deck[52], staticHand[HAND_SIZE];
-  float analyzeResults[ANALYZE_RESOLUTION];
-  int size, rank;
-  int handScore;
-  //int throwAwayCards[10];
+  int analyzeResults[ANALYZE_RESOLUTION];
+  int size;
   
   int *devHand;
   int *devAnalyzeResults;
@@ -41,14 +53,15 @@ int main(int argc, char *argv[])
   setStaticHand(deck, staticHand);
   //setRandomHand(deck, randomHand, throwAwayCards, 0);   
 
-  handScore = eval_5hand(staticHand);
-  rank = hand_rank(handScore);
+  /*
   printf("CPU Hand: ");
   print_hand(staticHand, 5);
-  printf("CPU Score: ");
-  printf("%d\n", handScore);  
-  printf("CPU Rank: %s\n\n", value_str[rank]);
-  
+  print_bits(staticHand[0]);
+  print_bits(staticHand[1]);
+  print_bits(staticHand[2]);
+  print_bits(staticHand[3]);
+  print_bits(staticHand[4]);  
+  */
   
   size = HAND_SIZE * sizeof(int);
   HANDLE_ERROR(cudaMalloc(&devHand, HAND_SIZE * sizeof(int)));
@@ -57,11 +70,16 @@ int main(int argc, char *argv[])
   size = ANALYZE_RESOLUTION * sizeof(int);
   HANDLE_ERROR(cudaMalloc(&devAnalyzeResults, size));  
 
-  analyzeHand<<<1,ANALYZE_RESOLUTION>>>(devHand, devHand, HAND_SIZE, devAnalyzeResults, devStates);
+  int blockCnt = (ANALYZE_RESOLUTION + THREADS_PER_BLOCK -1) / THREADS_PER_BLOCK;
+  printf("block cnt: %d\n", blockCnt);
   
-  size = ANALYZE_RESOLUTION * sizeof(float);
+  
+  analyzeHand<<<blockCnt,THREADS_PER_BLOCK>>>(devHand, devHand, HAND_SIZE, devAnalyzeResults, devStates);
+  
+  size = ANALYZE_RESOLUTION * sizeof(int);
   HANDLE_ERROR(cudaMemcpy(analyzeResults, devAnalyzeResults, size, cudaMemcpyDeviceToHost));
 
+  printf("Score: %.2f%%\n", (float)analyzeResults[0] / (float)ANALYZE_RESOLUTION * 100.0);
 
   return 0;
 }
@@ -86,51 +104,3 @@ void setStaticHand(int *deck, int *hand)
   cardIndex = find_card(King, HEART, deck);
   hand[4] = deck[cardIndex];
 }
-
-
-/*
-int findit2( int key )
-{
-    int low = 0, high = 4887, mid;
-
-    while ( low <= high )
-    {
-        mid = (high+low) >> 1;      // divide by two
-        if ( key < products[mid] )
-            high = mid - 1;
-        else if ( key > products[mid] )
-            low = mid + 1;
-        else
-            return( mid );
-    }
-    printf("ERROR:  no match found; key = %d\n", key );
-    return( -1 );
-}
-
-short eval_5cards2( int c1, int c2, int c3, int c4, int c5 )
-{
-    int q;
-    short s;
-    q = (c1|c2|c3|c4|c5) >> 16;
-    if ( c1 & c2 & c3 & c4 & c5 & 0xF000 )
-  	 return( flushes[q] );
-    s = unique5[q];
-    if ( s )  return ( s );
-    q = (c1&0xFF) * (c2&0xFF) * (c3&0xFF) * (c4&0xFF) * (c5&0xFF);
-    q = findit2( q );
-
-    return( values[q] );
-}
-
-
-short eval_5hand2( int *hand )
-{
-    int c1, c2, c3, c4, c5;
-    c1 = *hand++;
-    c2 = *hand++;
-    c3 = *hand++;
-    c4 = *hand++;
-    c5 = *hand;
-    return( eval_5cards2(c1,c2,c3,c4,c5) );
-}
-*/

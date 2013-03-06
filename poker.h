@@ -9,8 +9,10 @@
 #define	HIGH_CARD	9
 
 #define HAND_SIZE 5
-#define ANALYZE_RESOLUTION 32
+#define ANALYZE_RESOLUTION 4096
+#define THREADS_PER_BLOCK 512
 #define THROWAWAY_RESOLUTION 10
+
 
 
 #define	RANK(x)		((x >> 8) & 0xF)
@@ -52,6 +54,8 @@ __global__ void analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int 
 
 
 void setStaticHand (int *deck, int *hand);
+__device__ void setStaticHandDev(int *deck, int *hand);
+
 __device__ void setRandomHand (int *deck, int *hand, int *excludedCards, int excludeCnt, curandState localState); 
 __device__ void updateHand (int *deck, int *hand, int *throwAwayCards, int throwAwayCnt, curandState localState);
 __host__ __device__ int inArray (int value, int *array, int size);
