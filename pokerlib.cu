@@ -28,7 +28,7 @@ __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAn
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   int i;
 
-  curand_init(1234, index, 0, &state[index]); /* need to seed by time */  
+  curand_init(clock(), index, 0, &state[index]);
   curandState localState = state[index];
   
   int deck[52];
