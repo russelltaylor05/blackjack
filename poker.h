@@ -9,13 +9,13 @@
 #define	HIGH_CARD	9
 
 #define HAND_SIZE 5
-#define ANALYZE_RESOLUTION 10000
+#define ANALYZE_RESOLUTION 32
 #define THROWAWAY_RESOLUTION 10
 
 
 #define	RANK(x)		((x >> 8) & 0xF)
 
-static char *value_str[] = {
+__device__ static char *value_str[] = {
 	"",
 	"Straight Flush",
 	"Four of a Kind",
@@ -47,28 +47,29 @@ static char *value_str[] = {
 #define King	11
 #define Ace	12
 
-__global__ void analyzeHand(int *hand, int *exclude, int excludeSize, float *devAnalyzeResults, curandState *state);
+__global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAnalyzeResults, curandState *state);
 __global__ void analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayCnt);
 
 
 void setStaticHand (int *deck, int *hand);
 __device__ void setRandomHand (int *deck, int *hand, int *excludedCards, int excludeCnt, curandState localState); 
 __device__ void updateHand (int *deck, int *hand, int *throwAwayCards, int throwAwayCnt, curandState localState);
-__device__ int inArray (int value, int *array, int size);
-__device__ void printRankTable (int *deck);
-__device__ int findCardIndex (int *hand, int cardValue, int handSize);
+__host__ __device__ int inArray (int value, int *array, int size);
+__host__ __device__ void printRankTable (int *deck);
+__host__ __device__ int findCardIndex (int *hand, int cardValue, int handSize);
 __device__ int getRandomCard(int *deck, int *exclude, int excludeSize, curandState localState);
-__device__ void copyHand (int *hand1, int *hand2, int handSize);
+__host__ __device__ void copyHand (int *hand1, int *hand2, int handSize);
+__device__ void printHandStats(int *hand);
 
-__device__ int findit( int key );
+__host__ __device__ int findit( int key );
 __host__ __device__ void init_deck( int *deck );
 __host__ __device__ int find_card( int rank, int suit, int *deck );
 __device__ void shuffle_deck( int *deck, curandState localState);
 __host__ __device__ void print_hand( int *hand, int n );
 __host__ __device__ void print_card( int card );
-__device__ int hand_rank( short val );
-__device__ short eval_5cards( int c1, int c2, int c3, int c4, int c5 );
-__device__ short eval_5hand( int *hand );
-__device__ short eval_7hand( int *hand );
+__host__ __device__ int hand_rank( short val );
+__host__ __device__ short eval_5cards( int c1, int c2, int c3, int c4, int c5 );
+__host__ __device__ short eval_5hand( int *hand );
+__host__ __device__ short eval_7hand( int *hand );
 
 

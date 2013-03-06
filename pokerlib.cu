@@ -1,82 +1,55 @@
 #include <stdio.h>
 #include <cuda.h>
-#include <time.h>
 #include <curand_kernel.h>
 #include "lookuptable.h"
 #include "poker.h"
 
 
-/* Generates new random cards specified in throwAwayCards
- * returns avergae win % of new hands compared against random dealer hands
- */ 
- /*
-__global__ void analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayCnt)
-{
-  float results, resultsTotal = 0;
-  int excludeCards[HAND_SIZE*2], originalHand[HAND_SIZE];
-  int score, rank, i;
-  int excludeCnt = HAND_SIZE + throwAwayCnt;
-  
-  copyHand(excludeCards, hand, HAND_SIZE);
-  copyHand(originalHand, hand, HAND_SIZE);
-
-  for (i = 0; i < throwAwayCnt; i++) {
-    excludeCards[HAND_SIZE + i] = throwAwayCards[i];
-  }  
-  
-  for(i = 0; i < THROWAWAY_RESOLUTION; i++) {
-
-    copyHand(hand, originalHand, HAND_SIZE);
-    updateHand(deck, hand, throwAwayCards, throwAwayCnt);   
-
-    results = analyzeHand(hand, deck, excludeCards, excludeCnt);
-    
-    print_hand(hand, HAND_SIZE);
-    score = eval_5hand(hand);
-    rank = hand_rank(score);
-    printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
-    
-    resultsTotal += results;    
-  }
-  
-  return resultsTotal / THROWAWAY_RESOLUTION;
-}
-*/
-
-
-/* Returns: %chance that hand will win */ 
-__global__ void analyzeHand(int *hand, int *exclude, int excludeSize, float *devAnalyzeResults, curandState *state)
+__global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAnalyzeResults, curandState *state)
 {
 
   int tempHand[HAND_SIZE];
   int tempScore;
   int handScore;    
-  int id = threadIdx.x;
+  int index = threadIdx.x;
+  int i;
 
-  curand_init(1234, id, 0, &state[id]);  
-  curandState localState = state[id];
+  curand_init(1234, index, 0, &state[index]); /* need to seed by time */  
+  curandState localState = state[index];
   
   int deck[52];
   init_deck(deck);
 
-  shuffle_deck(deck, localState);
-  
-  printf("time: %d",time(NULL));
+  //shuffle_deck(deck, localState);  
   //printf("\n\n%d) %d\n",id, deck2[0]);
-  /*
-  for(i = 0; i < 10; i++) {
-    x = curand_uniform(&localState);
-    printf("%d) %f\n",id, x);
-  }
-  */
-
-  
 
   handScore = eval_5hand(hand);
+  if(index == 0) {
+    printf("GPU Hand: \n");
+    print_hand(hand, HAND_SIZE);
+  }
+
+  
   setRandomHand(deck, tempHand, hand, HAND_SIZE, localState);
   tempScore = eval_5hand(tempHand);
-  print_hand(tempHand, HAND_SIZE);
-  //devAnalyzeResults[threadIdx.x] = (handScore > tempScore);
+  
+  
+  
+  devAnalyzeResults[index] =  (handScore < tempScore);
+  printf("%d)\t[%d]\t%d/%d\n", index, devAnalyzeResults[index], tempScore, handScore);
+  //printHandStats(tempHand);
+
+
+  for (i = ANALYZE_RESOLUTION/2;  i > 0; i >>= 1) {
+    __syncthreads();
+    if(index < i) {
+      devAnalyzeResults[index] = devAnalyzeResults[index] + devAnalyzeResults[index + i];
+    }
+  } 
+
+  if(index == 0) {
+    printf("Score: %d\n", devAnalyzeResults[index]);
+  }
 
 }
 
@@ -144,29 +117,8 @@ __device__ int getRandomCard(int *deck, int *exclude, int excludeSize, curandSta
 }
 
 
-/* Manually set a hand of cards
- * Check out poker.h for the #define variables
- * Assumes deck is initialized
- */
-void setStaticHand(int *deck, int *hand) 
-{
-  int cardIndex = 0;
-  
-  cardIndex = find_card(Nine, DIAMOND, deck);
-  hand[0] = deck[cardIndex];  
-  cardIndex = find_card(Ace, HEART, deck);
-  hand[1] = deck[cardIndex];
-  cardIndex = find_card(Ten, SPADE, deck);
-  hand[2] = deck[cardIndex];
-  cardIndex = find_card(Queen, HEART, deck);
-  hand[3] = deck[cardIndex];
-  cardIndex = find_card(King, HEART, deck);
-  hand[4] = deck[cardIndex];
-}
-
-
 /* copies source hand to destination hand */
-__device__ void copyHand (int *dest, int *source, int handSize) {
+__host__ __device__ void copyHand (int *dest, int *source, int handSize) {
   int i;    
   for(i = 0; i < handSize; i++) {
     dest[i] = source[i];
@@ -177,7 +129,7 @@ __device__ void copyHand (int *dest, int *source, int handSize) {
 /* Return 1 if value is in array
  * Return 0 if value is not in array
  */
-__device__ int inArray(int value, int *array, int size) 
+__host__ __device__ int inArray(int value, int *array, int size) 
 { 
   int i;
   for(i = 0; i < size; i++) {
@@ -189,7 +141,7 @@ __device__ int inArray(int value, int *array, int size)
 }
 
 /* returns index of cardValue in *hand */
-__device__ int findCardIndex(int *hand, int cardValue, int handSize) 
+__host__ __device__ int findCardIndex(int *hand, int cardValue, int handSize) 
 { 
   int i;
   for(i = 0; i < handSize; i++) {
@@ -200,20 +152,19 @@ __device__ int findCardIndex(int *hand, int cardValue, int handSize)
   return -1;
 }
 
-__device__ void printHandStats(int *hand, float results) 
+__device__ void printHandStats(int *hand) 
 {
     print_hand(hand, HAND_SIZE);
     int score = eval_5hand(hand);
     int rank = hand_rank(score);
-    //printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
-
+    printf("%d\t %s\n", score, value_str[rank]);
 }
 
 
 
 
 /* Print a table for frequency of each Hand by Rank */
-__device__ void printRankTable(int *deck) 
+__host__ __device__ void printRankTable(int *deck) 
 {
   int hand[5], freq[10];
   int a, b, c, d, e, i, j;
@@ -248,7 +199,7 @@ __device__ void printRankTable(int *deck)
 
 // perform a binary search on a pre-sorted array
 //
-__device__ int findit( int key )
+__host__ __device__ int findit( int key )
 {
     int low = 0, high = 4887, mid;
 
@@ -393,7 +344,7 @@ __host__ __device__ void print_card(int card)
 }
 
 
-__device__ int hand_rank( short val )
+__host__ __device__ int hand_rank( short val )
 {
     if (val > 6185) return(HIGH_CARD);        // 1277 high card
     if (val > 3325) return(ONE_PAIR);         // 2860 one pair
@@ -407,43 +358,38 @@ __device__ int hand_rank( short val )
 }
 
 
-__device__ short eval_5cards( int c1, int c2, int c3, int c4, int c5 )
+__host__ __device__ short eval_5cards( int c1, int c2, int c3, int c4, int c5 )
 {
     int q;
     short s;
 
     q = (c1|c2|c3|c4|c5) >> 16;
 
-    /* check for Flushes and StraightFlushes
-    */
+    /* check for Flushes and StraightFlushes */
     if ( c1 & c2 & c3 & c4 & c5 & 0xF000 )
-	return( flushes[q] );
+      return( flushes[q] );
 
-    /* check for Straights and HighCard hands
-    */
+    /* check for Straights and HighCard hands */
     s = unique5[q];
     if ( s )  return ( s );
 
-    /* let's do it the hard way
-    */
+    /* let's do it the hard way */
     q = (c1&0xFF) * (c2&0xFF) * (c3&0xFF) * (c4&0xFF) * (c5&0xFF);
-    q = findit( q );
+    q = findit(q);
 
     return( values[q] );
 }
 
 
-__device__ short eval_5hand( int *hand )
+__host__ __device__ short eval_5hand( int *hand )
 {
-    int c1, c2, c3, c4, c5;
-
-    c1 = *hand++;
-    c2 = *hand++;
-    c3 = *hand++;
-    c4 = *hand++;
-    c5 = *hand;
-
-    return( eval_5cards(c1,c2,c3,c4,c5) );
+  int c1, c2, c3, c4, c5;
+  c1 = *hand++;
+  c2 = *hand++;
+  c3 = *hand++;
+  c4 = *hand++;
+  c5 = *hand;
+  return( eval_5cards(c1,c2,c3,c4,c5) );
 }
 
 
@@ -451,7 +397,7 @@ __device__ short eval_5hand( int *hand )
 // best five-card hand possible out of seven cards.
 // I am working on a faster algorithm.
 //
-__device__ short eval_7hand( int *hand )
+__host__ __device__ short eval_7hand( int *hand )
 {
     int i, j, q, best = 9999, subhand[5];
 
@@ -466,3 +412,42 @@ __device__ short eval_7hand( int *hand )
 	return( best );
 }
 
+
+
+
+/* Generates new random cards specified in throwAwayCards
+ * returns avergae win % of new hands compared against random dealer hands
+ */ 
+ /*
+__global__ void analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayCnt)
+{
+  float results, resultsTotal = 0;
+  int excludeCards[HAND_SIZE*2], originalHand[HAND_SIZE];
+  int score, rank, i;
+  int excludeCnt = HAND_SIZE + throwAwayCnt;
+  
+  copyHand(excludeCards, hand, HAND_SIZE);
+  copyHand(originalHand, hand, HAND_SIZE);
+
+  for (i = 0; i < throwAwayCnt; i++) {
+    excludeCards[HAND_SIZE + i] = throwAwayCards[i];
+  }  
+  
+  for(i = 0; i < THROWAWAY_RESOLUTION; i++) {
+
+    copyHand(hand, originalHand, HAND_SIZE);
+    updateHand(deck, hand, throwAwayCards, throwAwayCnt);   
+
+    results = analyzeHand(hand, deck, excludeCards, excludeCnt);
+    
+    print_hand(hand, HAND_SIZE);
+    score = eval_5hand(hand);
+    rank = hand_rank(score);
+    printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
+    
+    resultsTotal += results;    
+  }
+  
+  return resultsTotal / THROWAWAY_RESOLUTION;
+}
+*/
