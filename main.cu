@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 {
   int deck[52], staticHand[HAND_SIZE];
   int analyzeResults[ANALYZE_RESOLUTION];
-  int size;
+  int size, sum =0;
   
   int *devHand;
   int *devAnalyzeResults;
@@ -73,15 +73,21 @@ int main(int argc, char *argv[])
   int blockCnt = (ANALYZE_RESOLUTION + THREADS_PER_BLOCK -1) / THREADS_PER_BLOCK;
   printf("block cnt: %d\n", blockCnt);
   
-  
   analyzeHand<<<blockCnt,THREADS_PER_BLOCK>>>(devHand, devHand, HAND_SIZE, devAnalyzeResults, devStates);
   
   size = ANALYZE_RESOLUTION * sizeof(int);
   HANDLE_ERROR(cudaMemcpy(analyzeResults, devAnalyzeResults, size, cudaMemcpyDeviceToHost));
 
-  printf("Score: %.2f%%\n", (float)analyzeResults[0] / (float)ANALYZE_RESOLUTION * 100.0);
+  for(i = 0; i < ANALYZE_RESOLUTION; i++) {
+    sum +=  analyzeResults[i];
+  }
 
-  return 0;
+  printf("Score: %.2f%%\n", (float)sum / (float)ANALYZE_RESOLUTION * 100.0);
+
+  cudaFree(devAnalyzeResults);
+  cudaFree(devHand);
+
+  return EXIT_SUCCESS;
 }
 
 

@@ -64,17 +64,17 @@ __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAn
 
 
   /* Sum Redux */
+  /*
   for (i = ANALYZE_RESOLUTION / 2;  i > 0; i >>= 1) {
     __syncthreads();
     if(index < i) {
       devAnalyzeResults[index] = devAnalyzeResults[index] + devAnalyzeResults[index + i];
     }
-  } 
-  
-  __syncthreads();
+  }   
   if(index == 0) {
     printf("Score: %d\n", devAnalyzeResults[index]);
   }
+  */
 
 }
 
