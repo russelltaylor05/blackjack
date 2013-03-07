@@ -18,12 +18,7 @@ static void HandleError( cudaError_t err, const char * file, int line)
     exit(EXIT_FAILURE);
   }
 }
-#define HANDLE_ERROR( err ) (HandleError( err, __FILE__, __LINE__ ))
-
-#define CUDA_CALL(x) do { if((x) != cudaSuccess) { \
-    printf("Error at %s:%d\n",__FILE__,__LINE__); \
-    return EXIT_FAILURE;}} while(0)
-    
+#define HANDLE_ERROR( err ) (HandleError( err, __FILE__, __LINE__ ))    
  
 
 int main(int argc, char *argv[])
@@ -42,21 +37,15 @@ int main(int argc, char *argv[])
   curandState *devStates;
 
   argsp = (ARGSP *)malloc(sizeof(ARGSP));  
-  getArgs(argsp, argc, argv);
+  if(getArgs(argsp, argc, argv) < 0) {
+    printf("Card arguments broken\n");
+    return EXIT_FAILURE;
+  };
 
   srand48((int) time(NULL));  
     
-  /* initialize the deck */
   init_deck_cpu(deck);
-  
-  /* Set Hands */
   setHandFromArgs(deck, staticHand, argsp);
-  setRandomHand_cpu(deck, randomHand, throwAwayCards, 0);   
-
-  /* Params */
-  printf("Card Params\n");
-  printf("%s %s %s %s %s", argsp->c1, argsp->c2, argsp->c3, argsp->c4, argsp->c5);
-  printf("\n\n");
 
   /* Static */
   score = eval_5hand_cpu(staticHand);
@@ -64,19 +53,11 @@ int main(int argc, char *argv[])
   printf("Static Hand\n");
   print_hand_cpu(staticHand, HAND_SIZE);
   printf("\t %d", score);
-  printf("\t %s\n\n", value_str_cpu[rank]);
+  printf("\t %s\n\n", value_str_cpu[rank]);  
 
-  
-  /* Random */
-  score = eval_5hand_cpu(randomHand);
-  rank = hand_rank_cpu(score);
-  printf("Random Hand\n");
-  print_hand_cpu(randomHand, HAND_SIZE);
-  printf("\t %d", score);
-  printf("\t %s\n\n", value_str_cpu[rank]);
-  
 
-  CUDA_CALL(cudaMalloc((void **)&devStates, ANALYZE_RESOLUTION * sizeof(curandState)));
+  /* Cuda Memeory Setup */
+  HANDLE_ERROR(cudaMalloc((void **)&devStates, ANALYZE_RESOLUTION * sizeof(curandState)));
   
   size = HAND_SIZE * sizeof(int);
   HANDLE_ERROR(cudaMalloc(&devHand, HAND_SIZE * sizeof(int)));
@@ -100,18 +81,19 @@ int main(int argc, char *argv[])
 
   printf("Score: %.2f%%\n", (float)sum / (float)ANALYZE_RESOLUTION * 100.0);
 
+  /* Free Cleanup*/
   cudaFree(devAnalyzeResults);
   cudaFree(devHand);
+  free(argsp);
 
   return EXIT_SUCCESS;
 }
 
 
-void getArgs(ARGSP *argsp, int argc, char *argv[])
+int getArgs(ARGSP *argsp, int argc, char *argv[])
 {
   
-  int c;
-  int option_index = 0;
+  int c, option_index = 0;
 
   static struct option long_options[] =
   {
@@ -151,6 +133,16 @@ void getArgs(ARGSP *argsp, int argc, char *argv[])
     }
   }
 
+  if(argsp->c1Flag 
+      && argsp->c2Flag 
+      && argsp->c3Flag
+      && argsp->c4Flag
+      && argsp->c5Flag){
+    return 1;    
+  } else {
+    return -1;  
+  }
+      
 }  
 
 

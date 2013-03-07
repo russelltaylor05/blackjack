@@ -59,7 +59,7 @@ typedef struct argsp
   char *c5;  
 } ARGSP;
 
-void getArgs(ARGSP *argsp, int argc, char *argv[]);
+int getArgs(ARGSP *argsp, int argc, char *argv[]);
 void freeArgs(ARGSP *argsp);
 
 void print_bits(int number);

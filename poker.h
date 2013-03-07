@@ -53,7 +53,6 @@ __global__ void analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int 
 
 
 __device__ void setStaticHandDev(int *deck, int *hand);
-
 __device__ void setRandomHand (int *deck, int *hand, int *excludedCards, int excludeCnt, curandState localState); 
 __device__ void updateHand (int *deck, int *hand, int *throwAwayCards, int throwAwayCnt, curandState localState);
 __device__ int inArray (int value, int *array, int size);
