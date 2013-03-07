@@ -5,30 +5,18 @@
 #include "poker.h"
 
 
-__device__ void print_bits_dev(int number ){
-   unsigned long mask = 1 << 30;
-   int cnt = 1;
-   while(mask){
-      (mask & number) ? printf("X") : printf(".");
-      mask = mask >> 1 ; 
-      if(!(cnt % 8)){
-         printf("|");
-      }
-      cnt++;
-   }
-   printf("\n");
-}
-
 __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAnalyzeResults, curandState *state)
 {
 
   int tempHand[HAND_SIZE];
   int tempScore;
-  int handScore, rank;    
+  int handScore;
+  int rank;    
   int index = blockIdx.x * blockDim.x + threadIdx.x;
-  int i;
+  //int i;
 
   curand_init(clock(), index, 0, &state[index]);
+  //curand_init(1234, index, 0, &state[index]);
   curandState localState = state[index];
   
   int deck[52];
@@ -36,30 +24,21 @@ __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAn
 
   //shuffle_deck(deck, localState);  
   //printf("\n\n%d) %d\n",id, deck2[0]);
-  
-  setStaticHandDev(deck, hand);
 
   handScore = eval_5hand(hand);
   rank = hand_rank(handScore);  
   if(index == 0) {
     printf("GPU Hand: ");
     print_hand(hand, HAND_SIZE);    
-    printf("%s\n", value_str[rank]);    
-    /*
-    print_bits_dev(hand[0]);
-    print_bits_dev(hand[1]);
-    print_bits_dev(hand[2]);
-    print_bits_dev(hand[3]);
-    print_bits_dev(hand[4]);
-    */
+    printf("%d", handScore);
+    printf("\t %s\n\n", value_str[rank]);
+   
   }
 
   setRandomHand(deck, tempHand, hand, HAND_SIZE, localState);
-  tempScore = eval_5hand(tempHand);
-  
-    
+  tempScore = eval_5hand(tempHand); 
   devAnalyzeResults[index] =  (handScore < tempScore);
-  printf("%d)\t[%d]\t%d/%d\n", index, devAnalyzeResults[index], tempScore, handScore);
+  //printf("%d)\t[%d]\t%d/%d\n", index, devAnalyzeResults[index], tempScore, handScore);
   //printHandStats(tempHand);
 
 
@@ -158,7 +137,7 @@ __device__ int getRandomCard(int *deck, int *exclude, int excludeSize, curandSta
 
 
 /* copies source hand to destination hand */
-__host__ __device__ void copyHand (int *dest, int *source, int handSize) {
+__device__ void copyHand (int *dest, int *source, int handSize) {
   int i;    
   for(i = 0; i < handSize; i++) {
     dest[i] = source[i];
@@ -169,7 +148,7 @@ __host__ __device__ void copyHand (int *dest, int *source, int handSize) {
 /* Return 1 if value is in array
  * Return 0 if value is not in array
  */
-__host__ __device__ int inArray(int value, int *array, int size) 
+__device__ int inArray(int value, int *array, int size) 
 { 
   int i;
   for(i = 0; i < size; i++) {
@@ -181,7 +160,7 @@ __host__ __device__ int inArray(int value, int *array, int size)
 }
 
 /* returns index of cardValue in *hand */
-__host__ __device__ int findCardIndex(int *hand, int cardValue, int handSize) 
+__device__ int findCardIndex(int *hand, int cardValue, int handSize) 
 { 
   int i;
   for(i = 0; i < handSize; i++) {
@@ -204,7 +183,7 @@ __device__ void printHandStats(int *hand)
 
 
 /* Print a table for frequency of each Hand by Rank */
-__host__ __device__ void printRankTable(int *deck) 
+__device__ void printRankTable(int *deck) 
 {
   int hand[5], freq[10];
   int a, b, c, d, e, i, j;
@@ -239,7 +218,7 @@ __host__ __device__ void printRankTable(int *deck)
 
 // perform a binary search on a pre-sorted array
 //
-__host__ __device__ int findit( int key )
+__device__ int findit( int key )
 {
     int low = 0, high = 4887, mid;
 
@@ -278,7 +257,7 @@ __host__ __device__ int findit( int key )
 //   cdhs = suit of card
 //   b = bit turned on depending on rank of card
 //
-__host__ __device__ void init_deck( int *deck )
+__device__ void init_deck( int *deck )
 {
     int i, j, n = 0, suit = 0x8000;
 
@@ -293,7 +272,7 @@ __host__ __device__ void init_deck( int *deck )
 //  the position of the found card.  If it is not found,
 //  then it returns -1
 //
-__host__ __device__  int find_card( int rank, int suit, int *deck )
+__device__  int find_card( int rank, int suit, int *deck )
 {
 	int i, c;
 
@@ -334,7 +313,7 @@ __device__ void shuffle_deck(int *deck, curandState localState)
 }
 
 
-__host__ __device__ void print_hand( int *hand, int n )
+__device__ void print_hand( int *hand, int n )
 {
   int i, r;
   char suit;
@@ -365,7 +344,7 @@ __host__ __device__ void print_hand( int *hand, int n )
   printf("%s", handString);
 }
 
-__host__ __device__ void print_card(int card) 
+__device__ void print_card(int card) 
 {
   int r;
   char suit;
@@ -385,7 +364,7 @@ __host__ __device__ void print_card(int card)
 }
 
 
-__host__ __device__ int hand_rank( short val )
+__device__ int hand_rank( short val )
 {
     if (val > 6185) return(HIGH_CARD);        // 1277 high card
     if (val > 3325) return(ONE_PAIR);         // 2860 one pair
@@ -399,7 +378,7 @@ __host__ __device__ int hand_rank( short val )
 }
 
 
-__host__ __device__ short eval_5cards( int c1, int c2, int c3, int c4, int c5 )
+__device__ short eval_5cards( int c1, int c2, int c3, int c4, int c5 )
 {
     int q;
     short s;
@@ -422,7 +401,7 @@ __host__ __device__ short eval_5cards( int c1, int c2, int c3, int c4, int c5 )
 }
 
 
-__host__ __device__ short eval_5hand( int *hand )
+__device__ short eval_5hand( int *hand )
 {
   int c1, c2, c3, c4, c5;
   c1 = *hand++;
@@ -439,7 +418,7 @@ __host__ __device__ short eval_5hand( int *hand )
 // best five-card hand possible out of seven cards.
 // I am working on a faster algorithm.
 //
-__host__ __device__ short eval_7hand( int *hand )
+ __device__ short eval_7hand( int *hand )
 {
     int i, j, q, best = 9999, subhand[5];
 
@@ -454,6 +433,20 @@ __host__ __device__ short eval_7hand( int *hand )
 	return( best );
 }
 
+
+__device__ void print_bits_dev(int number ){
+   unsigned long mask = 1 << 30;
+   int cnt = 1;
+   while(mask){
+      (mask & number) ? printf("X") : printf(".");
+      mask = mask >> 1 ; 
+      if(!(cnt % 8)){
+         printf("|");
+      }
+      cnt++;
+   }
+   printf("\n");
+}
 
 
 

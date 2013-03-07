@@ -18,7 +18,7 @@ rand: $(RANDFILES)
 
 
 run: poker
-	@./poker
+	./poker --c1 Kh --c2 9d --c3 8d --c4 7c --c5 As
 
 clean: 
 	rm -f *.o poker
