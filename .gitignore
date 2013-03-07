@@ -1,4 +1,5 @@
 *.swp
 strategy
 poker
+gpu_poker
 *.o
