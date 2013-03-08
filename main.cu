@@ -4,8 +4,9 @@
 #include <time.h>
 #include <cuda.h>
 #include <curand_kernel.h>
-#include "cpu_poker.h"
+
 #include "cpu_lookuptable.h"
+#include "cpu_poker.h"
 #include "poker.h"
 
 void    srand48();
@@ -21,16 +22,18 @@ static void HandleError( cudaError_t err, const char * file, int line)
 #define HANDLE_ERROR( err ) (HandleError( err, __FILE__, __LINE__ ))    
  
 
+
 int main(int argc, char *argv[])
 {
   int deck[52];
   int staticHand[HAND_SIZE];
-  int randomHand[HAND_SIZE];
-  int throwAwayCards[HAND_SIZE];
+  int blockCnt;
   int analyzeResults[ANALYZE_RESOLUTION];
   int size, sum =0;
   int i, score, rank;
   ARGSP *argsp;
+  
+  clock_t start, stop;
   
   int *devHand;
   int *devAnalyzeResults;  
@@ -47,16 +50,16 @@ int main(int argc, char *argv[])
   init_deck_cpu(deck);
   setHandFromArgs(deck, staticHand, argsp);
 
-  /* Static */
   score = eval_5hand_cpu(staticHand);
   rank = hand_rank_cpu(score);
-  printf("Static Hand\n");
+  printf("Hand: \t\t");
   print_hand_cpu(staticHand, HAND_SIZE);
-  printf("\t %d", score);
-  printf("\t %s\n\n", value_str_cpu[rank]);  
+  printf("\nScore: \t\t%d\n", score);
+  printf("Rank: \t\t%s\n", value_str_cpu[rank]);  
 
+  start = clock();
 
-  /* Cuda Memeory Setup */
+  // Cuda Memeory Setup
   HANDLE_ERROR(cudaMalloc((void **)&devStates, ANALYZE_RESOLUTION * sizeof(curandState)));
   
   size = HAND_SIZE * sizeof(int);
@@ -66,10 +69,7 @@ int main(int argc, char *argv[])
   size = ANALYZE_RESOLUTION * sizeof(int);
   HANDLE_ERROR(cudaMalloc(&devAnalyzeResults, size));  
 
-  int blockCnt = (ANALYZE_RESOLUTION + THREADS_PER_BLOCK -1) / THREADS_PER_BLOCK;
-  printf("block cnt: %d\n", blockCnt);
-  
-
+  blockCnt = (ANALYZE_RESOLUTION + THREADS_PER_BLOCK -1) / THREADS_PER_BLOCK;
   analyzeHand<<<blockCnt,THREADS_PER_BLOCK>>>(devHand, devHand, HAND_SIZE, devAnalyzeResults, devStates);
   
   size = ANALYZE_RESOLUTION * sizeof(int);
@@ -78,17 +78,18 @@ int main(int argc, char *argv[])
   for(i = 0; i < ANALYZE_RESOLUTION; i++) {
     sum +=  analyzeResults[i];
   }
+  stop = clock();
+  
+  printf("Score: \t\t%.2f%%\n", (float)sum / (float)ANALYZE_RESOLUTION * 100.0);
+  printf("Time: \t\t%f seconds\n", (double)(stop - start) / CLOCKS_PER_SEC);  
 
-  printf("Score: %.2f%%\n", (float)sum / (float)ANALYZE_RESOLUTION * 100.0);
-
-  /* Free Cleanup*/
+  // Free Cleanup
   cudaFree(devAnalyzeResults);
   cudaFree(devHand);
   free(argsp);
 
   return EXIT_SUCCESS;
 }
-
 
 int getArgs(ARGSP *argsp, int argc, char *argv[])
 {
@@ -103,6 +104,12 @@ int getArgs(ARGSP *argsp, int argc, char *argv[])
     {"c3",  required_argument, 0, 'c'},
     {"c4",  required_argument, 0, 'd'},
     {"c5",  required_argument, 0, 'e'},
+    {"t1",  required_argument, 0, 'f'},
+    {"t2",  required_argument, 0, 'g'},
+    {"t3",  required_argument, 0, 'h'},
+    {"t4",  required_argument, 0, 'i'},
+    {"t5",  required_argument, 0, 'j'},
+
     {0, 0, 0, 0}
   };  
 
@@ -130,6 +137,27 @@ int getArgs(ARGSP *argsp, int argc, char *argv[])
         argsp->c5Flag = 1;
         argsp->c5 = optarg;
         break;
+      case 'f':
+        argsp->t1Flag = 1;
+        argsp->t1 = optarg;
+        break;
+      case 'g':
+        argsp->t2Flag = 1;
+        argsp->t2 = optarg;
+        break;
+      case 'h':
+        argsp->t3Flag = 1;
+        argsp->t3 = optarg;
+        break;
+      case 'i':
+        argsp->t4Flag = 1;
+        argsp->t4 = optarg;
+        break;
+      case 'j':
+        argsp->t5Flag = 1;
+        argsp->t5 = optarg;
+        break;
+
     }
   }
 
@@ -471,10 +499,14 @@ void setHandFromArgs(int *deck, int *hand, ARGSP *argsp)
 {
   int index = -1;
 
-  index = parseCard(argsp->c1, deck);
-  hand[0] = deck[index];
-  index = parseCard(argsp->c2, deck);
-  hand[1] = deck[index];
+  if(index = parseCard(argsp->c1, deck)) {
+    hand[0] = deck[index];
+  } else { printf("Set Hand Error\n");}
+
+  if(index = parseCard(argsp->c2, deck)) {
+    hand[1] = deck[index];
+  } else { printf("Set Hand Error\n");}
+  
   index = parseCard(argsp->c3, deck);
   hand[2] = deck[index];
   index = parseCard(argsp->c4, deck);
@@ -489,46 +521,47 @@ int parseCard(char *str, int *deck)
 {
   int rank, suit;
 
+  //printf("%c%c, ", str[0], str[1]);
   switch (str[0])
   {
     case '2':
-      rank = Deuce;
+      rank = Deuce_CPU;
       break;
     case '3':
-      rank = Trey;
+      rank = Trey_CPU;
       break;
     case '4':
-      rank = Four;
+      rank = Four_CPU;
       break;
     case '5':
-      rank = Five;
+      rank = Five_CPU;
       break;
     case '6':
-      rank = Six;
+      rank = Six_CPU;
       break;
     case '7':
-      rank = Seven;
+      rank = Seven_CPU;
       break;
     case '8':
-      rank = Eight;
+      rank = Eight_CPU;
       break;
     case '9':
-      rank = Nine;
+      rank = Nine_CPU;
       break;
     case 'T':
-      rank = Ten;
+      rank = Ten_CPU;
       break;
     case 'J':
-      rank = Jack;
+      rank = Jack_CPU;
       break;
     case 'Q':
-      rank = Queen;
+      rank = Queen_CPU;
       break;
     case 'K':
-      rank = King;
+      rank = King_CPU;
       break;
     case 'A':
-      rank = Ace;
+      rank = Ace_CPU;
       break;
     default:
       rank = -1;
@@ -537,26 +570,25 @@ int parseCard(char *str, int *deck)
   switch (str[1])
   {
     case 'd':
-      suit = DIAMOND;
+      suit = DIAMOND_CPU;
       break;
     case 'h':
-      suit = HEART;
+      suit = HEART_CPU;
       break;
     case 's':
-      suit = SPADE;
+      suit = SPADE_CPU;
       break;
     case 'c':
-      suit = CLUB;
+      suit = CLUB_CPU;
       break;
     default:
       suit = -1;
       break;
   }
   
-  //printf("s: %d, r: %d\n", suit, rank);
-  if(suit > 0 && rank > 0) {
+  if(suit >= 0 && rank >= 0) {
     return find_card_cpu(rank, suit, deck);
   } else  {
-    return -1;
+    return 0;
   }
 }

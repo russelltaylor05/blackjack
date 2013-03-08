@@ -1,3 +1,6 @@
+#ifndef CPU_POKER
+#define CPU_POKER
+
 #define	STRAIGHT_FLUSH_CPU	1
 #define	FOUR_OF_A_KIND_CPU	2
 #define	FULL_HOUSE_CPU	3
@@ -34,15 +37,15 @@ static char *value_str_cpu[] = {
 #define Trey_CPU	1
 #define Four_CPU	2
 #define Five_CPU	3
-#define Six_CPU	4
+#define Six_CPU	  4
 #define Seven_CPU	5
 #define Eight_CPU	6
 #define Nine_CPU	7
-#define Ten_CPU	8
+#define Ten_CPU	  8
 #define Jack_CPU	9
 #define Queen_CPU	10
 #define King_CPU	11
-#define Ace_CPU	12
+#define Ace_CPU	  12
 
 
 typedef struct argsp
@@ -56,7 +59,18 @@ typedef struct argsp
   char *c2;
   char *c3;
   char *c4;
-  char *c5;  
+  char *c5; 
+  int t1Flag;
+  int t2Flag;  
+  int t3Flag;
+  int t4Flag;
+  int t5Flag;  
+  char *t1;
+  char *t2;
+  char *t3;
+  char *t4;
+  char *t5;  
+
 } ARGSP;
 
 int getArgs(ARGSP *argsp, int argc, char *argv[]);
@@ -89,3 +103,5 @@ short eval_5hand_cpu( int *hand );
 
 int hand_rank_cpu( short val );
 
+
+#endif

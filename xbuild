@@ -1,0 +1,3 @@
+#!/bin/bash  
+
+nvcc -g -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include main.cu pokerlib.cu -o gpu_poker

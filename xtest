@@ -1,0 +1,2 @@
+#!/bin/bash  
+./gpu_poker --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As

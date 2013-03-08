@@ -9,7 +9,7 @@
 #define	HIGH_CARD	9
 
 #define HAND_SIZE 5
-#define ANALYZE_RESOLUTION 4096
+#define ANALYZE_RESOLUTION 8192
 #define THREADS_PER_BLOCK 512
 #define THROWAWAY_RESOLUTION 10
 
@@ -29,7 +29,7 @@ __device__ static char *value_str[] = {
 	"High Card"
 };
 
-#define CLUB	0x8000
+#define CLUB	  0x8000
 #define DIAMOND 0x4000
 #define HEART   0x2000
 #define SPADE   0x1000

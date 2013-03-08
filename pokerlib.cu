@@ -8,51 +8,30 @@
 __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAnalyzeResults, curandState *state)
 {
 
+  int deck[52];
   int tempHand[HAND_SIZE];
   int tempScore;
   int handScore;
-  int rank;    
   int index = blockIdx.x * blockDim.x + threadIdx.x;
-  //int i;
 
   curand_init(clock(), index, 0, &state[index]);
-  //curand_init(1234, index, 0, &state[index]);
   curandState localState = state[index];
   
-  int deck[52];
-  init_deck(deck);
-
-  //shuffle_deck(deck, localState);  
-  //printf("\n\n%d) %d\n",id, deck2[0]);
-
+  init_deck(deck);  
   handScore = eval_5hand(hand);
-  rank = hand_rank(handScore);  
-  if(index == 0) {
-    printf("GPU Hand: ");
-    print_hand(hand, HAND_SIZE);    
-    printf("%d", handScore);
-    printf("\t %s\n\n", value_str[rank]);
-   
-  }
 
   setRandomHand(deck, tempHand, hand, HAND_SIZE, localState);
   tempScore = eval_5hand(tempHand); 
   devAnalyzeResults[index] =  (handScore < tempScore);
-  //printf("%d)\t[%d]\t%d/%d\n", index, devAnalyzeResults[index], tempScore, handScore);
-  //printHandStats(tempHand);
 
-
-  /* Sum Redux */
   /*
+  // Sum Redux
   for (i = ANALYZE_RESOLUTION / 2;  i > 0; i >>= 1) {
     __syncthreads();
     if(index < i) {
       devAnalyzeResults[index] = devAnalyzeResults[index] + devAnalyzeResults[index + i];
     }
   }   
-  if(index == 0) {
-    printf("Score: %d\n", devAnalyzeResults[index]);
-  }
   */
 
 }
