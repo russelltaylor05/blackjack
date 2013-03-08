@@ -12,21 +12,10 @@
 #define	HIGH_CARD_CPU	9
 
 #define HAND_SIZE_CPU 5
+#define ANALYZE_RESOLUTION_CPU 4096
 
 #define	RANK_CPU(x)		((x >> 8) & 0xF)
 
-static char *value_str_cpu[] = {
-	"",
-	"Straight Flush",
-	"Four of a Kind",
-	"Full House",
-	"Flush",
-	"Straight",
-	"Three of a Kind",
-	"Two Pair",
-	"One Pair",
-	"High Card"
-};
 
 #define CLUB_CPU	0x8000
 #define DIAMOND_CPU 0x4000
@@ -46,6 +35,22 @@ static char *value_str_cpu[] = {
 #define Queen_CPU	10
 #define King_CPU	11
 #define Ace_CPU	  12
+
+
+extern "C" {
+
+static char *value_str_cpu[] = {
+	"",
+	"Straight Flush",
+	"Four of a Kind",
+	"Full House",
+	"Flush",
+	"Straight",
+	"Three of a Kind",
+	"Two Pair",
+	"One Pair",
+	"High Card"
+};
 
 
 typedef struct argsp
@@ -103,5 +108,6 @@ short eval_5hand_cpu( int *hand );
 
 int hand_rank_cpu( short val );
 
+}
 
 #endif

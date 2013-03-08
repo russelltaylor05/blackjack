@@ -7,6 +7,9 @@
 ** mean that combination is not possible with a five-card
 ** flush hand.
 */
+
+extern "C" {
+
 short flushes_cpu[] = {
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1971,5 +1974,6 @@ int perm7_cpu[21][5] = {
   { 2, 3, 4, 5, 6 }
 };
 
+}
 
 #endif
