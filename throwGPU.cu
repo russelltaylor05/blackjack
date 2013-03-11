@@ -103,14 +103,17 @@ int main(int argc, char *argv[])
 
   // Return Results 
   size = THROWAWAY_RESOLUTION * HAND_SIZE * sizeof(int);
-  //HANDLE_ERROR(cudaMemcpy(throwCombosResults, devThrowCombosResults, size, cudaMemcpyDeviceToHost));
+  HANDLE_ERROR(cudaMemcpy(throwCombosResults, devThrowCombosResults, size, cudaMemcpyDeviceToHost));
 
   size = analyzeBlockCnt * sizeof(int);
-  HANDLE_ERROR(cudaMemcpy(throwResults, devThrowResults, size, cudaMemcpyDeviceToHost));
+  printf("Result Size: \t\t%d\n", size);
+  //HANDLE_ERROR(cudaMemcpy(throwResults, devThrowResults, size, cudaMemcpyDeviceToHost));
 
+  /*
   for(i = 0; i < analyzeBlockCnt; i++) {
     sum += throwResults[i];
   }
+  */
 
 
   /*
