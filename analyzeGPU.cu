@@ -28,7 +28,9 @@ int main(int argc, char *argv[])
   int i, score, rank;
   ARGSP *argsp;
   
-  clock_t start, stop;
+  cudaEvent_t start, stop;
+  float   elapsedTime;
+  
   
   int *devHand;
   int *devAnalyzeResults;  
@@ -51,8 +53,11 @@ int main(int argc, char *argv[])
   print_hand_cpu(staticHand, HAND_SIZE);
   printf("\nScore: \t\t%d\n", score);
   printf("Rank: \t\t%s\n", value_str_cpu[rank]);  
+  printf("Analyze Res: \t%d\n", ANALYZE_RESOLUTION);  
 
-  start = clock();
+  HANDLE_ERROR(cudaEventCreate(&start));
+  HANDLE_ERROR(cudaEventCreate(&stop));
+  HANDLE_ERROR(cudaEventRecord(start, 0));
 
   // Cuda Memeory Setup
   HANDLE_ERROR(cudaMalloc((void **)&devStates, ANALYZE_RESOLUTION * sizeof(curandState)));
@@ -64,19 +69,28 @@ int main(int argc, char *argv[])
   size = ANALYZE_RESOLUTION * sizeof(int);
   HANDLE_ERROR(cudaMalloc(&devAnalyzeResults, size));  
 
+
+  HANDLE_ERROR(cudaMalloc((void **)&devStates, ANALYZE_RESOLUTION * sizeof(curandState)));  
+
   blockCnt = (ANALYZE_RESOLUTION + THREADS_PER_BLOCK -1) / THREADS_PER_BLOCK;
   analyzeHand<<<blockCnt,THREADS_PER_BLOCK>>>(devHand, devHand, HAND_SIZE, devAnalyzeResults, devStates);
+
   
+  HANDLE_ERROR(cudaEventRecord( stop, 0 ));
+  HANDLE_ERROR(cudaEventSynchronize( stop ));
+  HANDLE_ERROR(cudaEventElapsedTime( &elapsedTime, start, stop ));
+  printf( "Kernel Time:  \t%.1f ms\n", elapsedTime );
+
+
   size = ANALYZE_RESOLUTION * sizeof(int);
   HANDLE_ERROR(cudaMemcpy(analyzeResults, devAnalyzeResults, size, cudaMemcpyDeviceToHost));
 
   for(i = 0; i < ANALYZE_RESOLUTION; i++) {
     sum +=  analyzeResults[i];
   }
-  stop = clock();
   
   printf("Score: \t\t%.2f%%\n", (float)sum / (float)ANALYZE_RESOLUTION * 100.0);
-  printf("Time: \t\t%f seconds\n", (double)(stop - start) / CLOCKS_PER_SEC);  
+  //printf("Time: \t\t%f seconds\n", (double)(stop - start) / CLOCKS_PER_SEC);  
 
   // Free Cleanup
   cudaFree(devAnalyzeResults);

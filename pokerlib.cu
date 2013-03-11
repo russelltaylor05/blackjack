@@ -9,7 +9,7 @@ __global__ void curandSetup(curandState *state)
 {
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   //curand_init(1234, index, 0, &state[index]);
-  curand_init((1234 << 20) + index, 0 , 0, &state[index]);
+  curand_init((clock() << 20) + index, 0 , 0, &state[index]);
 }
 
 
@@ -20,17 +20,19 @@ __global__ void analyzeThrowCombos(int *hand, int *devthrowCombosResults, int *d
   int compareHand[HAND_SIZE];
   int excludeCards[HAND_SIZE * 2];
   int excludeCnt = 10;
-  int rank, randomScore, handScore;
+  int randomScore, handScore;
   int i;
+  __shared__ int tempResults[THREADS_PER_BLOCK];
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   int compareIndex = (index / ANALYZE_RESOLUTION) * 5;
       
   init_deck(deck);
+
   
   curandState localState = state[index];
   // If THROWAWAY_RESOLUTION < 20 the curand stuff destroys cuda memory ????
   
-  /*
+
   for(i = 0; i < 5; i++) {
     compareHand[i] = devthrowCombosResults[compareIndex + i];
     excludeCards[i] = compareHand[i];
@@ -38,7 +40,6 @@ __global__ void analyzeThrowCombos(int *hand, int *devthrowCombosResults, int *d
   for(i = 5; i < 10; i++) {
     excludeCards[i] = hand[i - HAND_SIZE];
   }
-  */
   
   //setRandomHand(deck, randomHand, excludeCards, excludeCnt, localState);
   setRandomHand(deck, randomHand, hand, HAND_SIZE, localState);
@@ -46,18 +47,24 @@ __global__ void analyzeThrowCombos(int *hand, int *devthrowCombosResults, int *d
   
   handScore = eval_5hand(compareHand);
   randomScore = eval_5hand(randomHand);
-  /*
-  if(randomScore == 666) {
-    //printf("index: %d \t curand: %f, \n", index, curand_uniform(&localState));
-    print_hand(excludeCards, excludeCnt);
-    //setRandomHand(deck, randomHand, excludeCards, excludeCnt, localState);
-    //print_hand(randomHand, HAND_SIZE);
-  }
-  */
+  // if(randomScore == 666) we got a bad hand. do not include
   
-  if(threadIdx.x == 0){
-    devThrowResults[blockIdx.x] =  (handScore < randomScore);
+  tempResults[threadIdx.x] =  (handScore < randomScore);
+
+  for (i = THREADS_PER_BLOCK / 2;  i > 0; i >>= 1) {
+    __syncthreads();
+    if(threadIdx.x < i) {
+      tempResults[threadIdx.x] = tempResults[threadIdx.x] + tempResults[threadIdx.x + i];
+    }
   }
+  
+  __syncthreads();
+  if(threadIdx.x == 0) {
+    //printf("Resutls: %d\t blockid: %d\n", tempResults[0], blockIdx.x);
+    devThrowResults[blockIdx.x] = tempResults[0];
+  }
+  
+
   /*
   if(index == 0) {
     randomScore = eval_5hand(hand);
@@ -77,7 +84,6 @@ __global__ void createThrowCombos(int *hand, int *throwCards, int throwCnt, int 
   int deck[52];
   int tempHand[HAND_SIZE];
   int i;
-  int tempScore, rank;
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   int resultIndex = index * 5;
   
@@ -103,14 +109,11 @@ __global__ void createThrowCombos(int *hand, int *throwCards, int throwCnt, int 
     devthrowCombosResults[resultIndex++] = tempHand[i];      
   }
   
-  tempScore = eval_5hand(tempHand);  
-  
 }
 
 
 __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAnalyzeResults, curandState *state)
 {
-
   int deck[52];
   int tempHand[HAND_SIZE];
   int tempScore;
@@ -118,7 +121,6 @@ __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAn
   int rank;
   int index = blockIdx.x * blockDim.x + threadIdx.x;
 
-  curand_init(clock(), index, 0, &state[index]);
   curandState localState = state[index];
   
   init_deck(deck);  
@@ -131,22 +133,11 @@ __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAn
     printf("GPU rank: \t%s\n", value_str[rank]);    
   }
   
-
   setRandomHand(deck, tempHand, hand, HAND_SIZE, localState);
   tempScore = eval_5hand(tempHand); 
   devAnalyzeResults[index] =  (handScore < tempScore);
-
-  /*
-  // Sum Redux
-  for (i = ANALYZE_RESOLUTION / 2;  i > 0; i >>= 1) {
-    __syncthreads();
-    if(index < i) {
-      devAnalyzeResults[index] = devAnalyzeResults[index] + devAnalyzeResults[index + i];
-    }
-  }   
-  */
-
 }
+
 
 __device__ void setStaticHandDev(int *deck, int *hand) 
 {
@@ -170,7 +161,7 @@ __device__ void setStaticHandDev(int *deck, int *hand)
  */
 __device__ void setRandomHand(int *deck, int *hand, int *excludedCards, int excludeCnt, curandState localState) 
 {
-  int i;  
+  int i;
   int excludedCardsTemp[HAND_SIZE * 2];
     
   /* Copy exclude cards to new temp array */
@@ -215,7 +206,7 @@ __device__ void updateHand(int *deck, int *hand, int *throwAwayCards, int throwA
 }
 
 /* Returns random card VALUE that is not in exclude array */
-__device__ int getRandomCard(int *deck, int *exclude, int excludeSize, curandState localState) 
+__device__ int getRandomCard2(int *deck, int *exclude, int excludeSize, curandState localState) 
 {
   int i = 0;  
   shuffle_deck(deck, localState);
@@ -224,6 +215,19 @@ __device__ int getRandomCard(int *deck, int *exclude, int excludeSize, curandSta
   }
          
   return deck[i];
+}
+
+/* Returns random card VALUE that is not in exclude array */
+__device__ int getRandomCard(int *deck, int *exclude, int excludeSize, curandState localState) 
+{
+  int n;
+  
+  n = (int)(51.9999999 * curand_uniform(&localState));
+  while(inArray(deck[n], exclude, excludeSize )) {
+    n = (int)(51.9999999 * curand_uniform(&localState));
+  }
+         
+  return deck[n];
 }
 
 
@@ -398,7 +402,6 @@ __device__ void shuffle_deck(int *deck, curandState localState)
         } while ( temp[n] == 0 );        
         deck[i] = temp[n];
         temp[n] = 0;
-        //printf("%d-%d[%d],", threadIdx.x, i, deck[i]);
     }
     //printf("%d,", deck[0]);
 }

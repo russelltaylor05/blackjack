@@ -33,7 +33,6 @@ int main(int argc, char *argv[])
   cudaEvent_t start, stop;
   float   elapsedTime;
 
-  
   int *devHand;
   int *devThrowCards;
   int *devThrowCombosResults; 
@@ -71,11 +70,14 @@ int main(int argc, char *argv[])
     return -1;
   }
   
-  HANDLE_ERROR(cudaEventCreate(&start));
-  HANDLE_ERROR(cudaEventCreate(&stop));
-  HANDLE_ERROR(cudaEventRecord(start, 0));
+    HANDLE_ERROR(cudaEventCreate(&start));
+    HANDLE_ERROR(cudaEventCreate(&stop));
+    HANDLE_ERROR(cudaEventRecord(start, 0));
   
-  HANDLE_ERROR(cudaMalloc((void **)&devStates, THROWAWAY_RESOLUTION * ANALYZE_RESOLUTION * sizeof(curandState)));  
+  size = THROWAWAY_RESOLUTION * ANALYZE_RESOLUTION * sizeof(curandState);
+  printf("curandSize: \t%d\n", sizeof(curandState));
+  printf("curandSize: \t%d\n", size);
+  HANDLE_ERROR(cudaMalloc((void **)&devStates, size));  
 
   size = HAND_SIZE * sizeof(int);
   HANDLE_ERROR(cudaMalloc(&devHand, HAND_SIZE * sizeof(int)));
@@ -104,13 +106,11 @@ int main(int argc, char *argv[])
   analyzeThrowCombos<<<analyzeBlockCnt,THREADS_PER_BLOCK>>>(devHand, devThrowCombosResults, devThrowResults, devStates);
 
 
-  HANDLE_ERROR(cudaEventRecord( stop, 0 ));
-  HANDLE_ERROR(cudaEventSynchronize( stop ));
-  HANDLE_ERROR(cudaEventElapsedTime( &elapsedTime, start, stop ));
-  printf( "Kernel Time:  %.1f ms\n", elapsedTime );
-
-
-  HANDLE_ERROR(cudaEventRecord(start, 0));  
+    HANDLE_ERROR(cudaEventRecord( stop, 0 ));
+    HANDLE_ERROR(cudaEventSynchronize( stop ));
+    HANDLE_ERROR(cudaEventElapsedTime( &elapsedTime, start, stop ));
+    printf( "Kernel Time:  \t%.1f ms\n", elapsedTime );
+    HANDLE_ERROR(cudaEventRecord(start, 0));  
 
   // Return Results 
   size = THROWAWAY_RESOLUTION * HAND_SIZE * sizeof(int);
@@ -121,22 +121,17 @@ int main(int argc, char *argv[])
   printf("Result Size: \t%d\n", size);
   HANDLE_ERROR(cudaMemcpy(throwResults, devThrowResults, size, cudaMemcpyDeviceToHost));
 
-  HANDLE_ERROR(cudaEventRecord( stop, 0 ));
-  HANDLE_ERROR(cudaEventSynchronize( stop ));
-  HANDLE_ERROR(cudaEventElapsedTime( &elapsedTime, start, stop ));
-  printf( "MemCpy Time:  %.1f ms\n", elapsedTime );
+    HANDLE_ERROR(cudaEventRecord( stop, 0 ));
+    HANDLE_ERROR(cudaEventSynchronize( stop ));
+    HANDLE_ERROR(cudaEventElapsedTime( &elapsedTime, start, stop ));
+    printf( "MemCpy Time: \t%.1f ms\n", elapsedTime );
 
-
-
-  /*
   for(i = 0; i < analyzeBlockCnt; i++) {
     sum += throwResults[i];
   }
-  */
 
-
-  printf("Sum: \t\t%d\n",sum);
-  printf("throwScore: \t%.2f%%\n", (float)sum / (float)(analyzeBlockCnt) * 100.0);
+  printf("Sum: \t\t%d\n", sum);
+  printf("throwScore: \t%.2f%%\n", (float)sum / (float)(analyzeBlockCnt * THREADS_PER_BLOCK) * 100.0);
   //printf("Time: \t\t%f seconds\n", (double)(stop - start) / CLOCKS_PER_SEC);  
 
   HANDLE_ERROR(cudaEventDestroy( start ));

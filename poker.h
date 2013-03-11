@@ -9,9 +9,9 @@
 #define	HIGH_CARD	9
 
 #define HAND_SIZE 5
-#define ANALYZE_RESOLUTION 1024
+#define ANALYZE_RESOLUTION 4096
 #define THREADS_PER_BLOCK 512
-#define THROWAWAY_RESOLUTION 1024
+#define THROWAWAY_RESOLUTION 4096
 
 
 #define	RANK(x)		((x >> 8) & 0xF)
@@ -60,6 +60,7 @@ __device__ int inArray (int value, int *array, int size);
 __device__ void printRankTable (int *deck);
 __device__ int findCardIndex (int *hand, int cardValue, int handSize);
 __device__ int getRandomCard(int *deck, int *exclude, int excludeSize, curandState localState);
+__device__ int getRandomCard2(int *deck, int *exclude, int excludeSize, curandState localState);
 __device__ void copyHand (int *hand1, int *hand2, int handSize);
 __device__ void printHandStats(int *hand);
 
