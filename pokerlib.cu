@@ -5,13 +5,11 @@
 #include "poker.h"
 
 
-
-__global__ void curandSetup(curandState *state) {
-
+__global__ void curandSetup(curandState *state) 
+{
   int index = blockIdx.x * blockDim.x + threadIdx.x;
-
-  curand_init(1234, index, 0, &state[index]);
-
+  //curand_init(1234, index, 0, &state[index]);
+  curand_init((1234 << 20) + index, 0 , 0, &state[index]);
 }
 
 
@@ -32,6 +30,7 @@ __global__ void analyzeThrowCombos(int *hand, int *devthrowCombosResults, int *d
   curandState localState = state[index];
   // If THROWAWAY_RESOLUTION < 20 the curand stuff destroys cuda memory ????
   
+  /*
   for(i = 0; i < 5; i++) {
     compareHand[i] = devthrowCombosResults[compareIndex + i];
     excludeCards[i] = compareHand[i];
@@ -39,6 +38,7 @@ __global__ void analyzeThrowCombos(int *hand, int *devthrowCombosResults, int *d
   for(i = 5; i < 10; i++) {
     excludeCards[i] = hand[i - HAND_SIZE];
   }
+  */
   
   //setRandomHand(deck, randomHand, excludeCards, excludeCnt, localState);
   setRandomHand(deck, randomHand, hand, HAND_SIZE, localState);
@@ -56,7 +56,7 @@ __global__ void analyzeThrowCombos(int *hand, int *devthrowCombosResults, int *d
   */
   
   if(threadIdx.x == 0){
-    devThrowResults[blockIdx.x] =  (handScore < randomScore);  
+    devThrowResults[blockIdx.x] =  (handScore < randomScore);
   }
   /*
   if(index == 0) {

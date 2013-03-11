@@ -30,7 +30,9 @@ int main(int argc, char *argv[])
   int sum = 0;
   ARGSP *argsp;
   
-  clock_t start, stop;
+  cudaEvent_t start, stop;
+  float   elapsedTime;
+
   
   int *devHand;
   int *devThrowCards;
@@ -57,8 +59,7 @@ int main(int argc, char *argv[])
   printf("\nScore: \t\t%d\n", score);
   printf("Rank: \t\t%s\n", value_str_cpu[rank]);  
   printf("ThrowAway Res: \t%d\n", THROWAWAY_RESOLUTION);  
-
-  start = clock();
+  printf("Analyze Res: \t%d\n\n", ANALYZE_RESOLUTION);  
 
   // Cuda Memeory Setup
   analyzeBlockCnt = (THROWAWAY_RESOLUTION * ANALYZE_RESOLUTION + THREADS_PER_BLOCK -1) / THREADS_PER_BLOCK;
@@ -69,7 +70,10 @@ int main(int argc, char *argv[])
     fprintf(stderr, "failed to allocate memory.\n");
     return -1;
   }
-   
+  
+  HANDLE_ERROR(cudaEventCreate(&start));
+  HANDLE_ERROR(cudaEventCreate(&stop));
+  HANDLE_ERROR(cudaEventRecord(start, 0));
   
   HANDLE_ERROR(cudaMalloc((void **)&devStates, THROWAWAY_RESOLUTION * ANALYZE_RESOLUTION * sizeof(curandState)));  
 
@@ -88,7 +92,6 @@ int main(int argc, char *argv[])
   HANDLE_ERROR(cudaMalloc(&devThrowResults, size));
   HANDLE_ERROR(cudaMemset(devThrowResults, 0, size));
 
-
   // Kernel Calls
   curandSetup<<<analyzeBlockCnt,THREADS_PER_BLOCK>>>(devStates);     
   
@@ -97,23 +100,59 @@ int main(int argc, char *argv[])
   createThrowCombos<<<comboBlockCnt,THREADS_PER_BLOCK>>>(devHand, devThrowCards, throwCnt, devThrowCombosResults, devStates);    
 
   printf("K2 blockcnt: \t%d\n", analyzeBlockCnt);
-  printf("K2 threadcnt: \t%d\n", analyzeBlockCnt * THREADS_PER_BLOCK);
+  printf("K2 threadcnt: \t%d\n\n", analyzeBlockCnt * THREADS_PER_BLOCK);
   analyzeThrowCombos<<<analyzeBlockCnt,THREADS_PER_BLOCK>>>(devHand, devThrowCombosResults, devThrowResults, devStates);
 
 
+  HANDLE_ERROR(cudaEventRecord( stop, 0 ));
+  HANDLE_ERROR(cudaEventSynchronize( stop ));
+  HANDLE_ERROR(cudaEventElapsedTime( &elapsedTime, start, stop ));
+  printf( "Kernel Time:  %.1f ms\n", elapsedTime );
+
+
+  HANDLE_ERROR(cudaEventRecord(start, 0));  
+
   // Return Results 
   size = THROWAWAY_RESOLUTION * HAND_SIZE * sizeof(int);
+  printf("Combo Size: \t%d\n", size);
   HANDLE_ERROR(cudaMemcpy(throwCombosResults, devThrowCombosResults, size, cudaMemcpyDeviceToHost));
 
   size = analyzeBlockCnt * sizeof(int);
-  printf("Result Size: \t\t%d\n", size);
-  //HANDLE_ERROR(cudaMemcpy(throwResults, devThrowResults, size, cudaMemcpyDeviceToHost));
+  printf("Result Size: \t%d\n", size);
+  HANDLE_ERROR(cudaMemcpy(throwResults, devThrowResults, size, cudaMemcpyDeviceToHost));
+
+  HANDLE_ERROR(cudaEventRecord( stop, 0 ));
+  HANDLE_ERROR(cudaEventSynchronize( stop ));
+  HANDLE_ERROR(cudaEventElapsedTime( &elapsedTime, start, stop ));
+  printf( "MemCpy Time:  %.1f ms\n", elapsedTime );
+
+
 
   /*
   for(i = 0; i < analyzeBlockCnt; i++) {
     sum += throwResults[i];
   }
   */
+
+
+  printf("Sum: \t\t%d\n",sum);
+  printf("throwScore: \t%.2f%%\n", (float)sum / (float)(analyzeBlockCnt) * 100.0);
+  //printf("Time: \t\t%f seconds\n", (double)(stop - start) / CLOCKS_PER_SEC);  
+
+  HANDLE_ERROR(cudaEventDestroy( start ));
+  HANDLE_ERROR(cudaEventDestroy( stop ));  
+
+  HANDLE_ERROR(cudaFree(devStates));
+  HANDLE_ERROR(cudaFree(devHand));
+  HANDLE_ERROR(cudaFree(devThrowCards));
+  HANDLE_ERROR(cudaFree(devThrowCombosResults));
+  HANDLE_ERROR(cudaFree(devThrowResults));
+
+  free(argsp);
+
+  return EXIT_SUCCESS;
+}
+
 
 
   /*
@@ -131,24 +170,5 @@ int main(int argc, char *argv[])
     printf("\t%s", value_str_cpu[rank]);
     printf("\n");
   }
-  */
-  
-
-  stop = clock();
-  printf("Sum: \t\t%d\n",sum);
-  //printf("Result Size: \t%d\n", THROWAWAY_RESOLUTION);
-  printf("throwScore: \t%.2f%%\n", (float)sum / (float)(analyzeBlockCnt) * 100.0);
-  printf("Time: \t\t%f seconds\n", (double)(stop - start) / CLOCKS_PER_SEC);  
-
-  /*
-  HANDLE_ERROR(cudaFree(devStates));
-  HANDLE_ERROR(cudaFree(devHand));
-  HANDLE_ERROR(cudaFree(devThrowCards));
-  HANDLE_ERROR(cudaFree(devThrowCombosResults));
-  HANDLE_ERROR(cudaFree(devThrowResults));
-  free(argsp);
-  */
-
-  return EXIT_SUCCESS;
-}
+  */  
 
