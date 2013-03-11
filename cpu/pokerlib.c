@@ -199,10 +199,10 @@ float analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayC
 
     results = analyzeHand(duplicateHand, deck, excludeCards, excludeCnt);
     
-    print_hand(duplicateHand, HAND_SIZE);
-    score = eval_5hand(duplicateHand);
-    rank = hand_rank(score);
-    printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
+    //print_hand(duplicateHand, HAND_SIZE);
+    //score = eval_5hand(duplicateHand);
+    //rank = hand_rank(score);
+    //printf("\t %.2f%%\t %s\n", results,  value_str[rank]);
     
     resultsTotal += results;    
   }
