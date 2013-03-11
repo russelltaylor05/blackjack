@@ -25,7 +25,8 @@ int main(int argc, char *argv[])
   int throwAway[HAND_SIZE];
   int throwCombosResults[THROWAWAY_RESOLUTION * HAND_SIZE];
   int *throwResults;
-  int score, rank, throwCnt, size, blockCnt, i;
+  int score, rank, throwCnt, size, i;
+  int comboBlockCnt, analyzeBlockCnt;
   int sum = 0;
   ARGSP *argsp;
   
@@ -41,14 +42,7 @@ int main(int argc, char *argv[])
   if(getArgs(argsp, argc, argv) < 0) {
     printf("Card arguments broken\n");
     return EXIT_FAILURE;
-  };
-  
-  throwResults = (int *)malloc(THROWAWAY_RESOLUTION * ANALYZE_RESOLUTION * sizeof(int)); 
-  if (throwResults == NULL) {
-    fprintf(stderr, "failed to allocate memory.\n");
-    return -1;
-  }
-  
+  }; 
 
   srand48((int) time(NULL));  
     
@@ -67,6 +61,16 @@ int main(int argc, char *argv[])
   start = clock();
 
   // Cuda Memeory Setup
+  analyzeBlockCnt = (THROWAWAY_RESOLUTION * ANALYZE_RESOLUTION + THREADS_PER_BLOCK -1) / THREADS_PER_BLOCK;
+  comboBlockCnt = (THROWAWAY_RESOLUTION + THREADS_PER_BLOCK -1) / THREADS_PER_BLOCK;
+  
+  throwResults = (int *)malloc(analyzeBlockCnt * sizeof(int)); 
+  if (throwResults == NULL) {
+    fprintf(stderr, "failed to allocate memory.\n");
+    return -1;
+  }
+   
+  
   HANDLE_ERROR(cudaMalloc((void **)&devStates, THROWAWAY_RESOLUTION * ANALYZE_RESOLUTION * sizeof(curandState)));  
 
   size = HAND_SIZE * sizeof(int);
@@ -80,36 +84,32 @@ int main(int argc, char *argv[])
   size = THROWAWAY_RESOLUTION * HAND_SIZE * sizeof(int);
   HANDLE_ERROR(cudaMalloc(&devThrowCombosResults, size));
 
-  size = THROWAWAY_RESOLUTION * ANALYZE_RESOLUTION * sizeof(int);
-  HANDLE_ERROR(cudaMalloc(&devThrowResults, size));  
+  size = analyzeBlockCnt * sizeof(int);
+  HANDLE_ERROR(cudaMalloc(&devThrowResults, size));
+  HANDLE_ERROR(cudaMemset(devThrowResults, 0, size));
 
 
   // Kernel Calls
-  __global__ void curandSetup(curandState *state);
-  blockCnt = (THROWAWAY_RESOLUTION * ANALYZE_RESOLUTION + THREADS_PER_BLOCK -1) / THREADS_PER_BLOCK;
-  curandSetup<<<blockCnt,THREADS_PER_BLOCK>>>(devStates);     
+  curandSetup<<<analyzeBlockCnt,THREADS_PER_BLOCK>>>(devStates);     
   
-  blockCnt = (THROWAWAY_RESOLUTION + THREADS_PER_BLOCK -1) / THREADS_PER_BLOCK;
-  printf("K1 blockcnt: \t%d\n",blockCnt);
-  printf("K1 threadcnt: \t%d\n\n", blockCnt * THREADS_PER_BLOCK);
-  //createThrowCombos<<<blockCnt,THREADS_PER_BLOCK>>>(devHand, devThrowCards, throwCnt, devThrowCombosResults, devStates);    
+  printf("K1 blockcnt: \t%d\n",comboBlockCnt);
+  printf("K1 threadcnt: \t%d\n\n", comboBlockCnt * THREADS_PER_BLOCK);
+  createThrowCombos<<<comboBlockCnt,THREADS_PER_BLOCK>>>(devHand, devThrowCards, throwCnt, devThrowCombosResults, devStates);    
 
-  blockCnt = (THROWAWAY_RESOLUTION * ANALYZE_RESOLUTION + THREADS_PER_BLOCK -1) / THREADS_PER_BLOCK;
-  printf("K2 blockcnt: \t%d\n", blockCnt);
-  printf("K2 threadcnt: \t%d\n", blockCnt * THREADS_PER_BLOCK);
-  //analyzeThrowCombos<<<blockCnt,THREADS_PER_BLOCK>>>(devHand, devThrowCombosResults, devThrowResults, devStates);
+  printf("K2 blockcnt: \t%d\n", analyzeBlockCnt);
+  printf("K2 threadcnt: \t%d\n", analyzeBlockCnt * THREADS_PER_BLOCK);
+  analyzeThrowCombos<<<analyzeBlockCnt,THREADS_PER_BLOCK>>>(devHand, devThrowCombosResults, devThrowResults, devStates);
 
 
   // Return Results 
   size = THROWAWAY_RESOLUTION * HAND_SIZE * sizeof(int);
-  HANDLE_ERROR(cudaMemcpy(throwCombosResults, devThrowCombosResults, size, cudaMemcpyDeviceToHost));
+  //HANDLE_ERROR(cudaMemcpy(throwCombosResults, devThrowCombosResults, size, cudaMemcpyDeviceToHost));
 
-  size = THROWAWAY_RESOLUTION * ANALYZE_RESOLUTION * sizeof(int);
+  size = analyzeBlockCnt * sizeof(int);
   HANDLE_ERROR(cudaMemcpy(throwResults, devThrowResults, size, cudaMemcpyDeviceToHost));
 
-  for(i = 0; i < THROWAWAY_RESOLUTION * ANALYZE_RESOLUTION; i++) {
+  for(i = 0; i < analyzeBlockCnt; i++) {
     sum += throwResults[i];
-    //printf("%d, ",throwResults[i]);
   }
 
 
@@ -134,15 +134,17 @@ int main(int argc, char *argv[])
   stop = clock();
   printf("Sum: \t\t%d\n",sum);
   //printf("Result Size: \t%d\n", THROWAWAY_RESOLUTION);
-  printf("throwScore: \t%.2f%%\n", (float)sum / (float)(THROWAWAY_RESOLUTION * ANALYZE_RESOLUTION) * 100.0);
+  printf("throwScore: \t%.2f%%\n", (float)sum / (float)(analyzeBlockCnt) * 100.0);
   printf("Time: \t\t%f seconds\n", (double)(stop - start) / CLOCKS_PER_SEC);  
 
+  /*
   HANDLE_ERROR(cudaFree(devStates));
   HANDLE_ERROR(cudaFree(devHand));
   HANDLE_ERROR(cudaFree(devThrowCards));
   HANDLE_ERROR(cudaFree(devThrowCombosResults));
   HANDLE_ERROR(cudaFree(devThrowResults));
   free(argsp);
+  */
 
   return EXIT_SUCCESS;
 }

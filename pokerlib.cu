@@ -10,7 +10,7 @@ __global__ void curandSetup(curandState *state) {
 
   int index = blockIdx.x * blockDim.x + threadIdx.x;
 
-  curand_init(clock(), index, 0, &state[index]);
+  curand_init(1234, index, 0, &state[index]);
 
 }
 
@@ -26,10 +26,9 @@ __global__ void analyzeThrowCombos(int *hand, int *devthrowCombosResults, int *d
   int i;
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   int compareIndex = (index / ANALYZE_RESOLUTION) * 5;
-  
-  //printf("%d, ",compareIndex);
-    
+      
   init_deck(deck);
+  
   curandState localState = state[index];
   // If THROWAWAY_RESOLUTION < 20 the curand stuff destroys cuda memory ????
   
@@ -47,18 +46,19 @@ __global__ void analyzeThrowCombos(int *hand, int *devthrowCombosResults, int *d
   
   handScore = eval_5hand(compareHand);
   randomScore = eval_5hand(randomHand);
+  /*
   if(randomScore == 666) {
     //printf("index: %d \t curand: %f, \n", index, curand_uniform(&localState));
     print_hand(excludeCards, excludeCnt);
     //setRandomHand(deck, randomHand, excludeCards, excludeCnt, localState);
     //print_hand(randomHand, HAND_SIZE);
   }
-      
-  devThrowResults[index] = 0;
-  devThrowResults[index] =  (handScore < randomScore);
-  //printf("%d, ",devThrowResults[compareIndex]);
+  */
   
-
+  if(threadIdx.x == 0){
+    devThrowResults[blockIdx.x] =  (handScore < randomScore);  
+  }
+  /*
   if(index == 0) {
     randomScore = eval_5hand(hand);
     rank = hand_rank(randomScore);
@@ -69,6 +69,7 @@ __global__ void analyzeThrowCombos(int *hand, int *devthrowCombosResults, int *d
     printf("K2 Score: \t%d\n", randomScore);
     printf("K2 rank: \t%s\n", value_str[rank]);    
   }
+  */
 }
 
 __global__ void createThrowCombos(int *hand, int *throwCards, int throwCnt, int *devthrowCombosResults, curandState *state)
@@ -84,6 +85,7 @@ __global__ void createThrowCombos(int *hand, int *throwCards, int throwCnt, int 
   curandState localState = state[index];
   /* If THROWAWAY_RESOLUTION < 20 the curand stuff destroys cuda memory ???? */
   
+  /*
   if(index == 0) {
     tempScore = eval_5hand(hand);
     rank = hand_rank(tempScore);
@@ -92,6 +94,7 @@ __global__ void createThrowCombos(int *hand, int *throwCards, int throwCnt, int 
     printf("GPU Score: \t%d\n", tempScore);
     printf("GPU rank: \t%s\n", value_str[rank]);    
   }
+  */
 
   copyHand (tempHand, hand, HAND_SIZE);
   updateHand(deck, tempHand, throwCards, throwCnt, localState);
