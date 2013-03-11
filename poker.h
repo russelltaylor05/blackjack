@@ -9,9 +9,9 @@
 #define	HIGH_CARD	9
 
 #define HAND_SIZE 5
-#define ANALYZE_RESOLUTION 8192
+#define ANALYZE_RESOLUTION 1024
 #define THREADS_PER_BLOCK 512
-#define THROWAWAY_RESOLUTION 10
+#define THROWAWAY_RESOLUTION 1024
 
 
 #define	RANK(x)		((x >> 8) & 0xF)
@@ -49,8 +49,9 @@ __device__ static char *value_str[] = {
 #define Ace	12
 
 __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAnalyzeResults, curandState *state);
-__global__ void analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayCnt);
-
+__global__ void createThrowCombos(int *hand, int *throwCards, int throwCnt, int *devThrowCombos, curandState *state);
+__global__ void analyzeThrowCombos(int *hand, int *devthrowCombosResults, int *devThrowResults, curandState *state);
+__global__ void curandSetup(curandState *state);
 
 __device__ void setStaticHandDev(int *deck, int *hand);
 __device__ void setRandomHand (int *deck, int *hand, int *excludedCards, int excludeCnt, curandState localState); 

@@ -7,9 +7,6 @@
 #include "cpu_poker.h"
 #include "poker.h"
 
-void    srand48();
-double  drand48();
-
 static void HandleError( cudaError_t err, const char * file, int line)
 {
   if(err !=cudaSuccess){

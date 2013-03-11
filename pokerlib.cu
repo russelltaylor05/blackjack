@@ -5,6 +5,106 @@
 #include "poker.h"
 
 
+
+__global__ void curandSetup(curandState *state) {
+
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+  curand_init(clock(), index, 0, &state[index]);
+
+}
+
+
+__global__ void analyzeThrowCombos(int *hand, int *devthrowCombosResults, int *devThrowResults, curandState *state)
+{
+  int deck[52];
+  int randomHand[HAND_SIZE];
+  int compareHand[HAND_SIZE];
+  int excludeCards[HAND_SIZE * 2];
+  int excludeCnt = 10;
+  int rank, randomScore, handScore;
+  int i;
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  int compareIndex = (index / ANALYZE_RESOLUTION) * 5;
+  
+  //printf("%d, ",compareIndex);
+    
+  init_deck(deck);
+  curandState localState = state[index];
+  // If THROWAWAY_RESOLUTION < 20 the curand stuff destroys cuda memory ????
+  
+  for(i = 0; i < 5; i++) {
+    compareHand[i] = devthrowCombosResults[compareIndex + i];
+    excludeCards[i] = compareHand[i];
+  }
+  for(i = 5; i < 10; i++) {
+    excludeCards[i] = hand[i - HAND_SIZE];
+  }
+  
+  //setRandomHand(deck, randomHand, excludeCards, excludeCnt, localState);
+  setRandomHand(deck, randomHand, hand, HAND_SIZE, localState);
+  /* error with exclude Cards */
+  
+  handScore = eval_5hand(compareHand);
+  randomScore = eval_5hand(randomHand);
+  if(randomScore == 666) {
+    //printf("index: %d \t curand: %f, \n", index, curand_uniform(&localState));
+    print_hand(excludeCards, excludeCnt);
+    //setRandomHand(deck, randomHand, excludeCards, excludeCnt, localState);
+    //print_hand(randomHand, HAND_SIZE);
+  }
+      
+  devThrowResults[index] = 0;
+  devThrowResults[index] =  (handScore < randomScore);
+  //printf("%d, ",devThrowResults[compareIndex]);
+  
+
+  if(index == 0) {
+    randomScore = eval_5hand(hand);
+    rank = hand_rank(randomScore);
+    printf("K2 result: \t%d\n", devThrowResults[index]);
+    printf("K2 Hand: \t");   print_hand(hand, HAND_SIZE);
+    printf("K2 Comp Hand: \t");   print_hand(compareHand, HAND_SIZE);
+    printf("K2 Rand: \t");   print_hand(randomHand, HAND_SIZE);
+    printf("K2 Score: \t%d\n", randomScore);
+    printf("K2 rank: \t%s\n", value_str[rank]);    
+  }
+}
+
+__global__ void createThrowCombos(int *hand, int *throwCards, int throwCnt, int *devthrowCombosResults, curandState *state)
+{
+  int deck[52];
+  int tempHand[HAND_SIZE];
+  int i;
+  int tempScore, rank;
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  int resultIndex = index * 5;
+  
+  init_deck(deck);
+  curandState localState = state[index];
+  /* If THROWAWAY_RESOLUTION < 20 the curand stuff destroys cuda memory ???? */
+  
+  if(index == 0) {
+    tempScore = eval_5hand(hand);
+    rank = hand_rank(tempScore);
+    printf("GPU Hand: \t");   print_hand(hand, HAND_SIZE);
+    printf("GPU Throw: \t");  print_hand(throwCards, throwCnt);
+    printf("GPU Score: \t%d\n", tempScore);
+    printf("GPU rank: \t%s\n", value_str[rank]);    
+  }
+
+  copyHand (tempHand, hand, HAND_SIZE);
+  updateHand(deck, tempHand, throwCards, throwCnt, localState);
+  
+  for(i = 0; i < HAND_SIZE; i++) {
+    devthrowCombosResults[resultIndex++] = tempHand[i];      
+  }
+  
+  tempScore = eval_5hand(tempHand);  
+  
+}
+
+
 __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAnalyzeResults, curandState *state)
 {
 
@@ -12,6 +112,7 @@ __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAn
   int tempHand[HAND_SIZE];
   int tempScore;
   int handScore;
+  int rank;
   int index = blockIdx.x * blockDim.x + threadIdx.x;
 
   curand_init(clock(), index, 0, &state[index]);
@@ -19,6 +120,14 @@ __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAn
   
   init_deck(deck);  
   handScore = eval_5hand(hand);
+  
+  if(index == 0) {
+    rank = hand_rank(handScore);
+    printf("GPU Hand: \t");   print_hand(hand, HAND_SIZE);
+    printf("GPU Score: \t%d\n", handScore);
+    printf("GPU rank: \t%s\n", value_str[rank]);    
+  }
+  
 
   setRandomHand(deck, tempHand, hand, HAND_SIZE, localState);
   tempScore = eval_5hand(tempHand); 
@@ -375,6 +484,9 @@ __device__ short eval_5cards( int c1, int c2, int c3, int c4, int c5 )
     /* let's do it the hard way */
     q = (c1&0xFF) * (c2&0xFF) * (c3&0xFF) * (c4&0xFF) * (c5&0xFF);
     q = findit(q);
+    
+    if(q < 0)
+      return 666;
 
     return( values[q] );
 }

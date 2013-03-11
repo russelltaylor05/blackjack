@@ -37,8 +37,6 @@
 #define Ace_CPU	  12
 
 
-extern "C" {
-
 static char *value_str_cpu[] = {
 	"",
 	"Straight Flush",
@@ -84,6 +82,7 @@ void freeArgs(ARGSP *argsp);
 void print_bits(int number);
 
 void setHandFromArgs(int *deck, int *hand, ARGSP *argsp);
+void setThrowFromArgs(int *deck, int *throwAway, int *throwCnt, ARGSP *argsp);
 int parseCard(char *str, int *deck);
 
 void setStaticHand_cpu (int *deck, int *hand);
@@ -107,7 +106,5 @@ short eval_5cards_cpu( int c1, int c2, int c3, int c4, int c5 );
 short eval_5hand_cpu( int *hand );
 
 int hand_rank_cpu( short val );
-
-}
 
 #endif

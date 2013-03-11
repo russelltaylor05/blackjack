@@ -1,2 +1,9 @@
 #!/bin/bash  
-./gpu_poker --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As
+
+#echo "analyze_gpu"
+#./analyze_gpu --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As
+#echo ""
+
+echo "throw_gpu"
+./throw_gpu --c1 Kh --c2 2d --c3 3d --c4 4c --c5 As --t1 Kh --t2 2d
+#./throw_gpu --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As --t1 Kh --t2 2d --t3 8d --t4 7c --t5 As

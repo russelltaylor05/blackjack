@@ -1,8 +1,7 @@
 #!/bin/bash  
 
-#gcc -c -Wall -g cpu_pokerlib.c -o cpu_pokerlib.o
-#nvcc -c -g -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include pokerlib.cu -o pokerLib.o
-#nvcc -c -g -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include analyzeGPU.cu  -o analyze_gpu.o
-#nvcc -lrt -g -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include cpu_pokerlib.o analyze_gpu.o pokerLib.o -o analyze_gpu
+#rm analyze_gpu
+#nvcc -g -G -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include pokerlib.cu cpu_pokerlib.cu analyzeGPU.cu -o analyze_gpu
 
-nvcc -g -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include pokerlib.cu analyzeGPU.cu cpu_pokerlib.c -o analyze_gpu
+rm throw_gpu
+nvcc -g -G -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include pokerlib.cu cpu_pokerlib.cu throwGPU.cu  -o throw_gpu
