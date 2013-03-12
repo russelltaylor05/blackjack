@@ -1,13 +1,16 @@
 CC = gcc
 
-SOURCES = poker.c
+SOURCES = poker_analyze.c
 
 CFLAGS = -Wall -g
 
-all: poker
+all: analyze throw
 	
-poker: poker.c pokerlib.o
-	${CC} ${CFLAGS} poker.c pokerlib.o -o poker	
+analyze: poker_analyze.c pokerlib.o
+	${CC} ${CFLAGS} poker_analyze.c pokerlib.o -o cpu_analyze	
+
+throw: poker_throw.c pokerlib.o
+	${CC} ${CFLAGS} poker_throw.c pokerlib.o -o cpu_throw	
 
 pokerlib.o: pokerlib.c lookuptable.h
 	${CC} -c ${CFLAGS} pokerlib.c -o pokerlib.o
@@ -16,4 +19,4 @@ run: poker
 	@./poker
 
 clean:
-	rm -rf *.o poker main strategy
+	rm -rf *.o poker main strategy cpu_analyze cpu_throw

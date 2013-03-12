@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <getopt.h>
 #include "lookuptable.h"
 #include "poker.h"
 
@@ -181,7 +182,7 @@ float analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayC
 {
   float results, resultsTotal = 0;
   int excludeCards[HAND_SIZE*2], duplicateHand[HAND_SIZE];
-  int score, rank, i;
+  int i;
   int excludeCnt = HAND_SIZE + throwAwayCnt;
   
   copyHand(excludeCards, hand, HAND_SIZE);
@@ -602,4 +603,222 @@ short eval_7hand( int *hand )
 			best = q;
 	}
 	return( best );
+}
+
+
+int getArgs(ARGSP *argsp, int argc, char *argv[])
+{
+  
+  int c, option_index = 0;
+
+  static struct option long_options[] =
+  {
+    /* These options set a flag. */
+    {"c1",  required_argument, 0, 'a'},
+    {"c2",  required_argument, 0, 'b'},
+    {"c3",  required_argument, 0, 'c'},
+    {"c4",  required_argument, 0, 'd'},
+    {"c5",  required_argument, 0, 'e'},
+    {"t1",  required_argument, 0, 'f'},
+    {"t2",  required_argument, 0, 'g'},
+    {"t3",  required_argument, 0, 'h'},
+    {"t4",  required_argument, 0, 'i'},
+    {"t5",  required_argument, 0, 'j'},
+
+    {0, 0, 0, 0}
+  };  
+
+  
+  while ((c = getopt_long(argc, argv, "a:b:c", long_options, &option_index)) != -1) {
+    switch (c)
+    {
+      case 'a':
+        argsp->c1Flag = 1;
+        argsp->c1 = optarg;
+        break;
+      case 'b':
+        argsp->c2Flag = 1;
+        argsp->c2 = optarg;
+        break;
+      case 'c':
+        argsp->c3Flag = 1;
+        argsp->c3 = optarg;
+        break;
+      case 'd':
+        argsp->c4Flag = 1;
+        argsp->c4 = optarg;
+        break;
+      case 'e':
+        argsp->c5Flag = 1;
+        argsp->c5 = optarg;
+        break;
+      case 'f':
+        argsp->t1Flag = 1;
+        argsp->t1 = optarg;
+        break;
+      case 'g':
+        argsp->t2Flag = 1;
+        argsp->t2 = optarg;
+        break;
+      case 'h':
+        argsp->t3Flag = 1;
+        argsp->t3 = optarg;
+        break;
+      case 'i':
+        argsp->t4Flag = 1;
+        argsp->t4 = optarg;
+        break;
+      case 'j':
+        argsp->t5Flag = 1;
+        argsp->t5 = optarg;
+        break;
+    }
+  }
+
+  if(argsp->c1Flag 
+      && argsp->c2Flag 
+      && argsp->c3Flag
+      && argsp->c4Flag
+      && argsp->c5Flag){
+    return 1;    
+  } else if(!argsp->c1Flag 
+      && !argsp->c2Flag 
+      && !argsp->c3Flag
+      && !argsp->c4Flag
+      && !argsp->c5Flag){
+    return 1;    
+  } else  {
+    return -1;  
+  }
+      
+}  
+
+
+
+void setThrowFromArgs(int *deck, int *throwAway, int *throwCnt, ARGSP *argsp)
+{
+  int index = 0;
+  int cnt = 0;
+
+  if(argsp->t1Flag) {
+    index = parseCard(argsp->t1, deck);
+    throwAway[cnt++] = deck[index];
+  }
+  if(argsp->t2Flag) {
+    index = parseCard(argsp->t2, deck);
+    throwAway[cnt++] = deck[index];
+  }
+  if(argsp->t3Flag) {
+    index = parseCard(argsp->t3, deck);
+    throwAway[cnt++] = deck[index];
+  }
+  if(argsp->t4Flag) {
+    index = parseCard(argsp->t4, deck);
+    throwAway[cnt++] = deck[index];
+  }
+  if(argsp->t5Flag) {
+    index = parseCard(argsp->t5, deck);
+    throwAway[cnt++] = deck[index];
+  }
+  
+  *throwCnt = cnt;
+}
+
+void setHandFromArgs(int *deck, int *hand, ARGSP *argsp) 
+{
+  int index = -1;
+
+  if((index = parseCard(argsp->c1, deck))) {
+    hand[0] = deck[index];
+  } else { printf("Set Hand Error\n");}
+
+  if((index = parseCard(argsp->c2, deck))) {
+    hand[1] = deck[index];
+  } else { printf("Set Hand Error\n");}
+  
+  index = parseCard(argsp->c3, deck);
+  hand[2] = deck[index];
+  index = parseCard(argsp->c4, deck);
+  hand[3] = deck[index];
+  index = parseCard(argsp->c5, deck);
+  hand[4] = deck[index];  
+  
+}
+
+
+/* Returns index of the Argument card string */
+int parseCard(char *str, int *deck) 
+{
+  int rank, suit;
+
+  //printf("%c%c, ", str[0], str[1]);
+  switch (str[0])
+  {
+    case '2':
+      rank = Deuce;
+      break;
+    case '3':
+      rank = Trey;
+      break;
+    case '4':
+      rank = Four;
+      break;
+    case '5':
+      rank = Five;
+      break;
+    case '6':
+      rank = Six;
+      break;
+    case '7':
+      rank = Seven;
+      break;
+    case '8':
+      rank = Eight;
+      break;
+    case '9':
+      rank = Nine;
+      break;
+    case 'T':
+      rank = Ten;
+      break;
+    case 'J':
+      rank = Jack;
+      break;
+    case 'Q':
+      rank = Queen;
+      break;
+    case 'K':
+      rank = King;
+      break;
+    case 'A':
+      rank = Ace;
+      break;
+    default:
+      rank = -1;
+      break;
+  }
+  switch (str[1])
+  {
+    case 'd':
+      suit = DIAMOND;
+      break;
+    case 'h':
+      suit = HEART;
+      break;
+    case 's':
+      suit = SPADE;
+      break;
+    case 'c':
+      suit = CLUB;
+      break;
+    default:
+      suit = -1;
+      break;
+  }
+  
+  if(suit >= 0 && rank >= 0) {
+    return find_card(rank, suit, deck);
+  } else  {
+    return 0;
+  }
 }

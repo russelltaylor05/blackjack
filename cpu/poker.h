@@ -1,3 +1,6 @@
+#ifndef CPU_POKER
+#define CPU_POKER
+
 #define	STRAIGHT_FLUSH	1
 #define	FOUR_OF_A_KIND	2
 #define	FULL_HOUSE	3
@@ -9,24 +12,10 @@
 #define	HIGH_CARD	9
 
 #define HAND_SIZE 5
-#define ANALYZE_RESOLUTION 1024
-#define THROWAWAY_RESOLUTION 1024
-
+#define ANALYZE_RESOLUTION 4096
+#define THROWAWAY_RESOLUTION 4096
 
 #define	RANK(x)		((x >> 8) & 0xF)
-
-static char *value_str[] = {
-	"",
-	"Straight Flush",
-	"Four of a Kind",
-	"Full House",
-	"Flush",
-	"Straight",
-	"Three of a Kind",
-	"Two Pair",
-	"One Pair",
-	"High Card"
-};
 
 #define CLUB	0x8000
 #define DIAMOND 0x4000
@@ -47,8 +36,48 @@ static char *value_str[] = {
 #define King	11
 #define Ace	12
 
+static char *value_str[] = {
+	"",
+	"Straight Flush",
+	"Four of a Kind",
+	"Full House",
+	"Flush",
+	"Straight",
+	"Three of a Kind",
+	"Two Pair",
+	"One Pair",
+	"High Card"
+};
+
+
+
 void    srand48();
 double  drand48();
+
+typedef struct argsp
+{
+  int c1Flag;
+  int c2Flag;  
+  int c3Flag;
+  int c4Flag;
+  int c5Flag;  
+  char *c1;
+  char *c2;
+  char *c3;
+  char *c4;
+  char *c5; 
+  int t1Flag;
+  int t2Flag;  
+  int t3Flag;
+  int t4Flag;
+  int t5Flag;  
+  char *t1;
+  char *t2;
+  char *t3;
+  char *t4;
+  char *t5;  
+
+} ARGSP;
 
 int findit( int key );
 void init_deck( int *deck );
@@ -61,6 +90,11 @@ short eval_5cards( int c1, int c2, int c3, int c4, int c5 );
 short eval_5hand( int *hand );
 short eval_7hand( int *hand );
 
+int getArgs(ARGSP *argsp, int argc, char *argv[]);
+void freeArgs(ARGSP *argsp);
+void setHandFromArgs(int *deck, int *hand, ARGSP *argsp);
+void setThrowFromArgs(int *deck, int *throwAway, int *throwCnt, ARGSP *argsp);
+int parseCard(char *str, int *deck);
 
 void setStaticHand (int *deck, int *hand);
 void setRandomHand (int *deck, int *hand, int *excludedCards, int excludeCnt) ; 
@@ -72,5 +106,7 @@ int getRandomCard(int *deck, int *exclude, int excludeSize);
 void copyHand (int *hand1, int *hand2, int handSize);
 float analyzeHand(int *hand, int *deck, int *exclude, int excludeSize);
 float analyzeThrowAway(int *hand, int *deck, int *throwAwayCards, int throwAwayCnt);
-float analyzePrediction(int *hand, int *deck, int *bestThrowAway,
-      int *bestThrowAwaySize);
+float analyzePrediction(int *hand, int *deck, int *bestThrowAway, int *bestThrowAwaySize);
+
+
+#endif
