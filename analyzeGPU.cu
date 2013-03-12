@@ -78,15 +78,16 @@ int main(int argc, char *argv[])
     HANDLE_ERROR(cudaEventSynchronize( stop ));
     HANDLE_ERROR(cudaEventElapsedTime( &elapsedTime, start, stop ));
 
-  printf("Hand: \t\t");
+  printf("\"Title\": \"GPU Analyze\",\n",score);
+  printf("\"Hand\":\"");
   print_hand_cpu(staticHand, HAND_SIZE);
-  printf("\nScore: \t\t%d\n", score);
-  printf("Rank: \t\t%s\n", value_str_cpu[rank]);    
-  printf("Score: \t\t%.2f%%\n", (float)sum / (float)ANALYZE_RESOLUTION * 100.0);
-  printf("Sum: \t\t%d\n", sum);
-  printf("Kernel Time:  \t%.1f ms\n", elapsedTime );
-  printf("Analyze Res: \t%d\n", ANALYZE_RESOLUTION);  
-  printf("Throw Res: \t%d\n", THROWAWAY_RESOLUTION);
+  printf("\",\n");
+  printf("\"Score\":%d,\n",score);
+  printf("\"Rank\":\"%s\",\n", value_str_cpu[rank]);
+  printf("\"Win\":%.2f,\n", (float) sum / (float) ANALYZE_RESOLUTION * 100.0);
+  printf("\"Sum\":%d,\n", sum);
+  printf("\"Kernel_Time\":%.2f,\n", elapsedTime);
+  printf("\"Analyze_Res\":%d\n", ANALYZE_RESOLUTION);
 
   // Free Cleanup
   cudaFree(devAnalyzeResults);

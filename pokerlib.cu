@@ -125,13 +125,15 @@ __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAn
   
   init_deck(deck);  
   handScore = eval_5hand(hand);
-  
+
+  /*  
   if(index == 0) {
     rank = hand_rank(handScore);
     printf("GPU Hand: \t");   print_hand(hand, HAND_SIZE);
     printf("GPU Score: \t%d\n", handScore);
     printf("GPU rank: \t%s\n", value_str[rank]);    
   }
+  */
   
   setRandomHand(deck, tempHand, hand, HAND_SIZE, localState);
   tempScore = eval_5hand(tempHand); 
