@@ -36,16 +36,19 @@ int main(int argc, char *argv[])
   stop = clock();
 
   /* Original Hand */
-  printf("Hand: \t\t");
-  print_hand(staticHand, HAND_SIZE);
+  
   score = eval_5hand(staticHand);
   rank = hand_rank(score);      
-  printf("\nScore: \t\t%s (%d)\n", value_str[rank], score);
-  printf("Win Ration: \t%.2f%% \n", results);
-  printf("Time: \t\t%.4f \n", (float)(stop - start) / CLOCKS_PER_SEC); 
-  printf("Analyze Res: \t%d \n", ANALYZE_RESOLUTION);   
-  printf("Throw Res: \t%d \n", THROWAWAY_RESOLUTION);
-
+  printf("\"Title\": \"CPU Analyze\",\n");
+  printf("\"Hand\":\"");
+  print_hand(staticHand, HAND_SIZE);
+  printf("\",\n");
+  printf("\"Score\":%d,\n",score);
+  printf("\"Rank\":\"%s\",\n", value_str[rank]);
+  printf("\"Win\":%.2f,\n", results);
+  printf("\"Time\":%.2f,\n", (float)(stop - start) / CLOCKS_PER_SEC * 1000.00);
+  printf("\"Analyze_Res\":%d\n", ANALYZE_RESOLUTION);
+  
   free(argsp);
     
   return 0;

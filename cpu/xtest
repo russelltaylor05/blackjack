@@ -1,5 +1,5 @@
 #!/bin/bash  
 
 
-./analyze --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As
-./throw --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As --t1 2d
+./cpu_analyze --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As
+#./cpu_throw --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As --t1 2d
