@@ -1,9 +1,14 @@
 #!/bin/bash  
 
-echo "analyze_gpu"
-./analyze_gpu --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As
+
+echo "ANALYZE CPU"
+./cpu/cpu_analyze --c1 Kh --c2 2d --c3 8d --c4 Ac --c5 As
+echo ""
+
+echo "ANALYZE GPU"
+./analyze_gpu --c1 Kh --c2 2d --c3 8d --c4 Ac --c5 As
 echo ""
 
 echo "throw_gpu"
-./throw_gpu --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As --t1 8d --t2 2d --t3 7c 
+#./throw_gpu --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As --t1 8d --t2 2d --t3 7c 
 #./throw_gpu --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As --t1 Kh --t2 2d --t3 8d --t4 7c --t5 As

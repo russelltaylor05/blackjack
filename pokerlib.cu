@@ -8,7 +8,7 @@
 __global__ void curandSetup(curandState *state) 
 {
   int index = blockIdx.x * blockDim.x + threadIdx.x;
-  //curand_init(1234, index, 0, &state[index]);
+  //curand_init(clock(), index, 0, &state[index]);
   curand_init((clock() << 20) + index, 0 , 0, &state[index]);
 }
 
