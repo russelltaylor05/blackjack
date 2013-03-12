@@ -97,14 +97,13 @@ int main(int argc, char *argv[])
   // Kernel Calls
   curandSetup<<<analyzeBlockCnt,THREADS_PER_BLOCK>>>(devStates);     
   
-  printf("K1 blockcnt: \t%d\n",comboBlockCnt);
+  printf("K1 blockcnt: \t%d\n", comboBlockCnt);
   printf("K1 threadcnt: \t%d\n\n", comboBlockCnt * THREADS_PER_BLOCK);
   createThrowCombos<<<comboBlockCnt,THREADS_PER_BLOCK>>>(devHand, devThrowCards, throwCnt, devThrowCombosResults, devStates);    
 
   printf("K2 blockcnt: \t%d\n", analyzeBlockCnt);
   printf("K2 threadcnt: \t%d\n\n", analyzeBlockCnt * THREADS_PER_BLOCK);
   analyzeThrowCombos<<<analyzeBlockCnt,THREADS_PER_BLOCK>>>(devHand, devThrowCombosResults, devThrowResults, devStates);
-
 
     HANDLE_ERROR(cudaEventRecord( stop, 0 ));
     HANDLE_ERROR(cudaEventSynchronize( stop ));
