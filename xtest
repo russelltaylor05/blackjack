@@ -1,12 +1,12 @@
 #!/bin/bash  
 
 
-echo "ANALYZE CPU"
-./cpu/cpu_analyze --c1 Kh --c2 2d --c3 8d --c4 Ac --c5 As
-echo ""
+#echo "ANALYZE CPU"
+#./cpu/cpu_analyze --c1 Kh --c2 2d --c3 8d --c4 Ac --c5 As
+#echo ""
 
 echo "ANALYZE GPU"
-./analyze_gpu --c1 Kh --c2 2d --c3 8d --c4 Ac --c5 As
+./analyze_gpu --c1 2c --c2 2d --c3 8d --c4 Ac --c5 As
 echo ""
 
 echo "THROW GPU"

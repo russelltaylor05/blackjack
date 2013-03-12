@@ -148,9 +148,9 @@ int main(int argc, char *argv[])
   printf("\"Win\":%.2f,\n", (float)sum / (float)(analyzeBlockCnt * THREADS_PER_BLOCK) * 100.0);
   printf("\"Sum\":%d,\n", sum);
   printf("\"Kernel_Time\":%.2f,\n", elapsedTime);
-  printf("\"Analyze_Res\":%d\n", ANALYZE_RESOLUTION);
-  printf("\"Throw_Res\":%d\n", THROWAWAY_RESOLUTION);
-  printf("\"Block_Cnt\":%d\n", analyzeBlockCnt);
+  printf("\"Analyze_Res\":%d,\n", ANALYZE_RESOLUTION);
+  printf("\"Throw_Res\":%d,\n", THROWAWAY_RESOLUTION);
+  printf("\"Block_Cnt\":%d,\n", analyzeBlockCnt);
   printf("\"Thread_cnt\":%d\n", analyzeBlockCnt * THREADS_PER_BLOCK);
   
 

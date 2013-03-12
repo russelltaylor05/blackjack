@@ -12,3 +12,7 @@ cd ..
 rm analyze_gpu
 nvcc -g -G -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include pokerlib.cu cpu_pokerlib.cu analyzeGPU.cu -o analyze_gpu
 cp analyze_gpu /var/www/html/exec
+
+rm throw_gpu
+nvcc -g -G -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include pokerlib.cu cpu_pokerlib.cu throwGPU.cu  -o throw_gpu
+cp throw_gpu /var/www/html/exec

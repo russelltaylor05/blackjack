@@ -465,16 +465,21 @@ void setHandFromArgs(int *deck, int *hand, ARGSP *argsp)
 {
   int index = -1;
 
-  if(index = parseCard(argsp->c1, deck)) {
+  index = parseCard(argsp->c1, deck);
+  if(index >= 0) {
     hand[0] = deck[index];
   } else { printf("Set Hand Error\n");}
 
-  if(index = parseCard(argsp->c2, deck)) {
+  index = parseCard(argsp->c2, deck);
+  if(index >= 0) {
     hand[1] = deck[index];
   } else { printf("Set Hand Error\n");}
   
   index = parseCard(argsp->c3, deck);
-  hand[2] = deck[index];
+  if(index >= 0){
+    hand[2] = deck[index];
+  } else { printf("Set Hand Error\n");}
+  
   index = parseCard(argsp->c4, deck);
   hand[3] = deck[index];
   index = parseCard(argsp->c5, deck);
@@ -486,7 +491,8 @@ void setHandFromArgs(int *deck, int *hand, ARGSP *argsp)
 int parseCard(char *str, int *deck) 
 {
   int rank, suit;
-
+  int index;
+  
   //printf("%c%c, ", str[0], str[1]);
   switch (str[0])
   {
@@ -553,8 +559,10 @@ int parseCard(char *str, int *deck)
   }
   
   if(suit >= 0 && rank >= 0) {
-    return find_card_cpu(rank, suit, deck);
+    index = find_card_cpu(rank, suit, deck); 
+    //printf("suit: %x\t rank: %d \t index: %d\n", suit, rank, index);
+    return index;
   } else  {
-    return 0;
+    return -1;
   }
 }

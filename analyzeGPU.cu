@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
   HANDLE_ERROR(cudaMalloc(&devAnalyzeResults, size));  
 
   // Kernel Calls 
-  blockCnt = (ANALYZE_RESOLUTION + THREADS_PER_BLOCK -1) / THREADS_PER_BLOCK;
+  blockCnt = (16 + THREADS_PER_BLOCK -1) / THREADS_PER_BLOCK;
   curandSetup<<<blockCnt,THREADS_PER_BLOCK>>>(devStates);   
   analyzeHand<<<blockCnt,THREADS_PER_BLOCK>>>(devHand, devHand, HAND_SIZE, devAnalyzeResults, devStates);
   
