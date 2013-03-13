@@ -51,6 +51,46 @@ static char *value_str_cpu[] = {
 };
 
 
+static short throwMask[31][5] = {
+  {1,0,0,0,0},
+  {0,1,0,0,0},
+  {0,0,1,0,0},
+  {0,0,0,1,0},
+  {0,0,0,0,1},
+  
+  {1,1,0,0,0},
+  {0,1,1,0,0},
+  {0,0,1,1,0},
+  {0,0,0,1,1},
+  {1,0,1,0,0},
+  {1,0,0,1,0},
+  {1,0,0,0,1},
+  {0,1,0,1,0},
+  {0,1,0,0,1},
+  {0,0,1,0,1},
+  
+  {1,1,1,0,0},
+  {0,1,1,1,0},
+  {0,0,1,1,1},
+  {1,1,0,1,0},
+  {1,1,0,0,1},
+  {0,1,1,0,1},
+  {1,0,1,1,0},
+  {1,0,0,1,1},
+  {0,1,0,1,1},
+  {1,0,1,0,1},
+  
+  {1,1,1,1,0},
+  {0,1,1,1,1},
+  {1,0,1,1,1},
+  {1,1,0,1,1},
+  {1,1,1,0,1},
+  
+  {1,1,1,1,1},
+  };
+
+
+
 
 typedef struct argsp
 {
@@ -85,6 +125,8 @@ void print_bits(int number);
 void setHandFromArgs(int *deck, int *hand, ARGSP *argsp);
 void setThrowFromArgs(int *deck, int *throwAway, int *throwCnt, ARGSP *argsp);
 int parseCard(char *str, int *deck);
+
+void setThrowCombo(int *throwAway, int *throwCnt, int *hand, int i);
 
 void setStaticHand_cpu (int *deck, int *hand);
 void setRandomHand_cpu (int *deck, int *hand, int *excludedCards, int excludeCnt); 

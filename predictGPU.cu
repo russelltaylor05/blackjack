@@ -25,6 +25,12 @@ int main(int argc, char *argv[])
   int throwAway[HAND_SIZE];
   int throwCombosResults[THROWAWAY_RESOLUTION * HAND_SIZE];
   int *throwResults;
+  float predictScores[31];
+  float predictWinTempScore;
+  int predictWinIndex;
+  short *mask;
+  int card;
+  
   int score, rank, throwCnt, size, i, j;
   int comboBlockCnt, analyzeBlockCnt;
   int sum = 0;
@@ -52,8 +58,10 @@ int main(int argc, char *argv[])
 
   score = eval_5hand_cpu(staticHand);
   rank = hand_rank_cpu(score);
-  /*
+
   printf("Hand: \t\t");    print_hand_cpu(staticHand, HAND_SIZE);
+  printf("\n");
+  /*
   printf("\nThrow: \t\t"); print_hand_cpu(throwAway, throwCnt);
   printf("\nScore: \t\t%d\n", score);
   printf("Rank: \t\t%s\n", value_str_cpu[rank]);  
@@ -92,34 +100,51 @@ int main(int argc, char *argv[])
   HANDLE_ERROR(cudaMemset(devThrowResults, 0, size));
 
   size = throwCnt * sizeof(int);
-  HANDLE_ERROR(cudaMalloc(&devThrowCards, throwCnt * sizeof(int)));
-  
+  HANDLE_ERROR(cudaMalloc(&devThrowCards, size));
   HANDLE_ERROR(cudaMemcpy(devThrowCards, throwAway, size, cudaMemcpyHostToDevice));
   
-  for(i = 0; i <= 2; i++) {
+  for(i = 0; i < 31; i++) {
   
-    // Kernel Calls
-    curandSetup<<<analyzeBlockCnt,THREADS_PER_BLOCK>>>(devStates);     
+    setThrowCombo(throwAway, &throwCnt, staticHand, i);
     
-    //printf("K1 blockcnt: \t%d\n", comboBlockCnt);
-    //printf("K1 threadcnt: \t%d\n\n", comboBlockCnt * THREADS_PER_BLOCK);
+    size = throwCnt * sizeof(int);
+    HANDLE_ERROR(cudaMalloc(&devThrowCards, size));
+    HANDLE_ERROR(cudaMemcpy(devThrowCards, throwAway, size, cudaMemcpyHostToDevice));
+
+    // Kernel Calls
+    curandSetup<<<analyzeBlockCnt,THREADS_PER_BLOCK>>>(devStates);         
     createThrowCombos<<<comboBlockCnt,THREADS_PER_BLOCK>>>(devHand, devThrowCards, throwCnt, devThrowCombosResults, devStates);    
-  
-    //printf("K2 blockcnt: \t%d\n", analyzeBlockCnt);
-    //printf("K2 threadcnt: \t%d\n\n", analyzeBlockCnt * THREADS_PER_BLOCK);
     analyzeThrowCombos<<<analyzeBlockCnt,THREADS_PER_BLOCK>>>(devHand, devThrowCombosResults, devThrowResults, devStates);
   
-    
     size = analyzeBlockCnt * sizeof(int);
-    //printf("Result Size: \t%d\n", size);
     HANDLE_ERROR(cudaMemcpy(throwResults, devThrowResults, size, cudaMemcpyDeviceToHost));
   
     sum = 0;
     for(j = 0; j < analyzeBlockCnt; j++) {
       sum += throwResults[j];
     }
-    printf("\"Sum[%d]\"\t:%d,\n", i, sum);
+    predictScores[i] = (float)sum / (float)(analyzeBlockCnt * THREADS_PER_BLOCK) * 100.0; 
+    printf("win[%d]: \t %.2f \t", i, predictScores[i]);
+    print_hand_cpu(throwAway, throwCnt);
+    printf("\n");    
   }
+  
+  predictWinTempScore = 0;
+  for(i = 0; i < 31; i++) {
+    if(predictScores[i] > predictWinTempScore) {
+      predictWinTempScore  = predictScores[i];
+      predictWinIndex = i;
+    }  
+  }
+
+  mask = throwMask[predictWinIndex];
+  for(j = 0; j < 5; j++) {
+    if(mask[j] == 1) {
+      card = staticHand[j];
+      print_card_cpu(card);
+    }
+  }
+  
 
   /*
   printf("\"Title\": \"GPU Throw\",\n",score);

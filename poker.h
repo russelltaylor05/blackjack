@@ -29,6 +29,7 @@ __device__ static char *value_str[] = {
 	"High Card"
 };
 
+
 #define CLUB	  0x8000
 #define DIAMOND 0x4000
 #define HEART   0x2000
@@ -47,6 +48,45 @@ __device__ static char *value_str[] = {
 #define Queen	10
 #define King	11
 #define Ace	12
+
+
+static short throwMask[31][5] = {
+  {1,0,0,0,0},
+  {0,1,0,0,0},
+  {0,0,1,0,0},
+  {0,0,0,1,0},
+  {0,0,0,0,1},
+  
+  {1,1,0,0,0},
+  {0,1,1,0,0},
+  {0,0,1,1,0},
+  {0,0,0,1,1},
+  {1,0,1,0,0},
+  {1,0,0,1,0},
+  {1,0,0,0,1},
+  {0,1,0,1,0},
+  {0,1,0,0,1},
+  {0,0,1,0,1},
+  
+  {1,1,1,0,0},
+  {0,1,1,1,0},
+  {0,0,1,1,1},
+  {1,1,0,1,0},
+  {1,1,0,0,1},
+  {0,1,1,0,1},
+  {1,0,1,1,0},
+  {1,0,0,1,1},
+  {0,1,0,1,1},
+  {1,0,1,0,1},
+  
+  {1,1,1,1,0},
+  {0,1,1,1,1},
+  {1,0,1,1,1},
+  {1,1,0,1,1},
+  {1,1,1,0,1},
+  
+  {1,1,1,1,1},
+  };
 
 __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAnalyzeResults, curandState *state);
 __global__ void createThrowCombos(int *hand, int *throwCards, int throwCnt, int *devThrowCombos, curandState *state);

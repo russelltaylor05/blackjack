@@ -8,8 +8,6 @@
 #include "cpu_poker.h"
 
 
-
-
 /* Returns: %chance that hand will win */ 
 float analyzeHand(int *hand, int *deck, int *exclude, int excludeSize)
 {
@@ -28,6 +26,22 @@ float analyzeHand(int *hand, int *deck, int *exclude, int excludeSize)
   }  
   return (float)wins / (float)resolution * 100.00;
 }
+
+void setThrowCombo(int *throwAway, int *throwCnt, int *hand, int i)
+{
+
+  short *mask = throwMask[i];
+  int j;
+  int cnt = 0;
+  
+  for(j = 0; j < 5; j++) {
+    if(mask[j] == 1) {
+      throwAway[cnt++] = hand[j];
+    }
+  }
+  *throwCnt = cnt;
+}
+
 
 int getArgs(ARGSP *argsp, int argc, char *argv[])
 {
