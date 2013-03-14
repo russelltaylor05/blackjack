@@ -6,13 +6,13 @@
 #echo ""
 
 echo "ANALYZE GPU"
-./analyze_gpu --c1 2c --c2 2d --c3 8d --c4 Ac --c5 As
+./analyze_gpu --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As
 echo ""
 
 #echo "THROW GPU"
-#./throw_gpu --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As --t1 8d --t2 2d --t3 7c 
+./throw_gpu --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As --t1 8d --t2 2d --t3 7c 
 #./throw_gpu --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As --t1 Kh --t2 2d --t3 8d --t4 7c --t5 As
 
 
-echo "PREDICT GPU"
-./predict_gpu --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As
+#echo "PREDICT GPU"
+#./predict_gpu --c1 Kh --c2 2d --c3 8d --c4 7c --c5 As

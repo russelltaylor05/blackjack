@@ -14,6 +14,8 @@
 #define HAND_SIZE_CPU 5
 #define ANALYZE_RESOLUTION_CPU 4096
 
+#define PREDICT_COMBOS 32
+
 #define	RANK_CPU(x)		((x >> 8) & 0xF)
 
 
@@ -51,7 +53,10 @@ static char *value_str_cpu[] = {
 };
 
 
-static short throwMask[31][5] = {
+static short throwMask[32][HAND_SIZE_CPU] = {
+
+  {0,0,0,0,0},
+
   {1,0,0,0,0},
   {0,1,0,0,0},
   {0,0,1,0,0},

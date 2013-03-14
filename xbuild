@@ -1,12 +1,12 @@
 #!/bin/bash  
 
-#rm analyze_gpu
-#nvcc -g -G -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include pokerlib.cu cpu_pokerlib.cu analyzeGPU.cu -o analyze_gpu
+rm analyze_gpu
+nvcc  -O2 -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include pokerlib.cu cpu_pokerlib.cu analyzeGPU.cu -o analyze_gpu
 
-#rm throw_gpu
+rm throw_gpu
 #nvcc -g -G -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include pokerlib.cu cpu_pokerlib.cu throwGPU.cu  -o throw_gpu
-#nvcc -O2 -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include pokerlib.cu cpu_pokerlib.cu throwGPU.cu  -o throw_gpu
+#nvcc  --ptxas-options=-v -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include pokerlib.cu cpu_pokerlib.cu throwGPU.cu  -o throw_gpu
+nvcc  -O2 -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include pokerlib.cu cpu_pokerlib.cu throwGPU.cu  -o throw_gpu
 
-
-rm predict_gpu
-nvcc -g -G -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include pokerlib.cu cpu_pokerlib.cu predictGPU.cu  -o predict_gpu
+#rm predict_gpu
+#nvcc -g -G -lcurand -arch=compute_20 -code=sm_20 -L/usr/local/cuda/include pokerlib.cu cpu_pokerlib.cu predictGPU.cu  -o predict_gpu

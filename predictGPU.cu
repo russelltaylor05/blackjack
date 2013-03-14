@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
   int staticHand[HAND_SIZE];
   //int tempHand[HAND_SIZE];
   int throwAway[HAND_SIZE];
-  int throwCombosResults[THROWAWAY_RESOLUTION * HAND_SIZE];
+  //int throwCombosResults[THROWAWAY_RESOLUTION * HAND_SIZE];
   int *throwResults;
   float predictScores[31];
   float predictWinTempScore;
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
   short *mask;
   int card;
   
-  int score, rank, throwCnt, size, i, j;
+  int score, throwCnt, size, i, j;
   int comboBlockCnt, analyzeBlockCnt;
   int sum = 0;
   ARGSP *argsp;
@@ -57,11 +57,11 @@ int main(int argc, char *argv[])
   setHandFromArgs(deck, staticHand, argsp);
 
   score = eval_5hand_cpu(staticHand);
-  rank = hand_rank_cpu(score);
+  //rank = hand_rank_cpu(score);
 
+  /*
   printf("Hand: \t\t");    print_hand_cpu(staticHand, HAND_SIZE);
   printf("\n");
-  /*
   printf("\nThrow: \t\t"); print_hand_cpu(throwAway, throwCnt);
   printf("\nScore: \t\t%d\n", score);
   printf("Rank: \t\t%s\n", value_str_cpu[rank]);  
@@ -99,11 +99,8 @@ int main(int argc, char *argv[])
   HANDLE_ERROR(cudaMalloc(&devThrowResults, size));
   HANDLE_ERROR(cudaMemset(devThrowResults, 0, size));
 
-  size = throwCnt * sizeof(int);
-  HANDLE_ERROR(cudaMalloc(&devThrowCards, size));
-  HANDLE_ERROR(cudaMemcpy(devThrowCards, throwAway, size, cudaMemcpyHostToDevice));
   
-  for(i = 0; i < 31; i++) {
+  for(i = 0; i < PREDICT_COMBOS; i++) {
   
     setThrowCombo(throwAway, &throwCnt, staticHand, i);
     
@@ -123,20 +120,33 @@ int main(int argc, char *argv[])
     for(j = 0; j < analyzeBlockCnt; j++) {
       sum += throwResults[j];
     }
+    
+    
     predictScores[i] = (float)sum / (float)(analyzeBlockCnt * THREADS_PER_BLOCK) * 100.0; 
-    printf("win[%d]: \t %.2f \t", i, predictScores[i]);
-    print_hand_cpu(throwAway, throwCnt);
-    printf("\n");    
+    
+    //print_hand_cpu(throwAway, throwCnt);    
+    //printf("win[%d] \t %.2f \t %d\n", i , predictScores[i], throwCnt);
+    
+    
   }
   
   predictWinTempScore = 0;
-  for(i = 0; i < 31; i++) {
+  for(i = 0; i < PREDICT_COMBOS; i++) {
     if(predictScores[i] > predictWinTempScore) {
       predictWinTempScore  = predictScores[i];
       predictWinIndex = i;
     }  
   }
 
+    HANDLE_ERROR(cudaEventRecord( stop, 0 ));
+    HANDLE_ERROR(cudaEventSynchronize( stop ));
+    HANDLE_ERROR(cudaEventElapsedTime( &elapsedTime, start, stop ));  
+
+  printf("\"Title\": \"GPU Predict\",\n",score);
+  printf("\"Hand\":\"");
+  print_hand_cpu(staticHand, HAND_SIZE);
+  printf("\",\n");
+  printf("\"best_throw\":\"");
   mask = throwMask[predictWinIndex];
   for(j = 0; j < 5; j++) {
     if(mask[j] == 1) {
@@ -144,26 +154,13 @@ int main(int argc, char *argv[])
       print_card_cpu(card);
     }
   }
-  
-
-  /*
-  printf("\"Title\": \"GPU Throw\",\n",score);
-  printf("\"Hand\":\"");
-  print_hand_cpu(staticHand, HAND_SIZE);
   printf("\",\n");
-  printf("\"Throw\":\"");
-  print_hand_cpu(throwAway, throwCnt);
-  printf("\",\n");
-  printf("\"Score\":%d,\n",score);
-  printf("\"Rank\":\"%s\",\n", value_str_cpu[rank]);
-  printf("\"Win\":%.2f,\n", (float)sum / (float)(analyzeBlockCnt * THREADS_PER_BLOCK) * 100.0);
-  printf("\"Sum\":%d,\n", sum);
+  printf("\"best_win\":%.2f,\n", predictScores[predictWinIndex]);
   printf("\"Kernel_Time\":%.2f,\n", elapsedTime);
   printf("\"Analyze_Res\":%d,\n", ANALYZE_RESOLUTION);
   printf("\"Throw_Res\":%d,\n", THROWAWAY_RESOLUTION);
   printf("\"Block_Cnt\":%d,\n", analyzeBlockCnt);
   printf("\"Thread_cnt\":%d\n", analyzeBlockCnt * THREADS_PER_BLOCK);
-  */
   
 
   HANDLE_ERROR(cudaEventDestroy( start ));
@@ -179,23 +176,3 @@ int main(int argc, char *argv[])
 
   return EXIT_SUCCESS;
 }
-
-
-
-  /*
-  printf("CPU Combos: \n");
-  for (i = 0; i < THROWAWAY_RESOLUTION * HAND_SIZE; i++) {
-    for(j = 0; j < 5; j++) {
-      tempHand[j] = throwCombosResults[i];
-      i++;      
-    }
-    i--;
-    score = eval_5hand_cpu(tempHand);
-    rank = hand_rank_cpu(score);
-    print_hand_cpu(tempHand, HAND_SIZE);
-    printf("\t%d", score);
-    printf("\t%s", value_str_cpu[rank]);
-    printf("\n");
-  }
-  */  
-

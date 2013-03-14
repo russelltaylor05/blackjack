@@ -49,45 +49,6 @@ __device__ static char *value_str[] = {
 #define King	11
 #define Ace	12
 
-
-static short throwMask[31][5] = {
-  {1,0,0,0,0},
-  {0,1,0,0,0},
-  {0,0,1,0,0},
-  {0,0,0,1,0},
-  {0,0,0,0,1},
-  
-  {1,1,0,0,0},
-  {0,1,1,0,0},
-  {0,0,1,1,0},
-  {0,0,0,1,1},
-  {1,0,1,0,0},
-  {1,0,0,1,0},
-  {1,0,0,0,1},
-  {0,1,0,1,0},
-  {0,1,0,0,1},
-  {0,0,1,0,1},
-  
-  {1,1,1,0,0},
-  {0,1,1,1,0},
-  {0,0,1,1,1},
-  {1,1,0,1,0},
-  {1,1,0,0,1},
-  {0,1,1,0,1},
-  {1,0,1,1,0},
-  {1,0,0,1,1},
-  {0,1,0,1,1},
-  {1,0,1,0,1},
-  
-  {1,1,1,1,0},
-  {0,1,1,1,1},
-  {1,0,1,1,1},
-  {1,1,0,1,1},
-  {1,1,1,0,1},
-  
-  {1,1,1,1,1},
-  };
-
 __global__ void analyzeHand(int *hand, int *exclude, int excludeSize, int *devAnalyzeResults, curandState *state);
 __global__ void createThrowCombos(int *hand, int *throwCards, int throwCnt, int *devThrowCombos, curandState *state);
 __global__ void analyzeThrowCombos(int *hand, int *devthrowCombosResults, int *devThrowResults, curandState *state);
